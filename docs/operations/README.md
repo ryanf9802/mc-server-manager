@@ -6,24 +6,33 @@ Documents runtime setup for running the app locally with `uv`.
 
 ## Contents
 
-- Required `.env` keys.
+- The encrypted local app-state workflow.
 - The remote layout under `${SFTP_SERVER_ROOT}/.mc-manager`.
 - Local run commands with `uv`.
-- Optional RCON settings for command execution.
+- Provider, SFTP, and optional RCON setup per saved server.
 
 ## Runtime Setup
 
-- Copy `.env.example` to `.env`.
-- Set `SFTP_HOST`, `SFTP_PORT`, `SFTP_USERNAME`, `SFTP_PASSWORD`, and `SFTP_SERVER_ROOT`.
-- Optionally set `RCON_HOST`, `RCON_PORT`, and `RCON_PASSWORD` to enable the console popup.
 - Install dependencies with `uv sync`.
 - Start the app with `uv run mc-server-manager`.
+- On first launch, create an application password.
+- Use `Add` on the home screen to connect to the provider API, discover a server, and then save provider, SFTP, and optional RCON settings in the server settings window.
+- For `GameHostBros`, the panel base URL is hard-coded to `https://panel.gamehostbros.com`; users do not enter it manually.
+- For `GameHostBros` SFTP, the settings window accepts `Connection Address`, `Username`, and `Password`. The app accepts either `sftp://host:port` or `host:port` and always saves `/` as the root.
+- Saved server configurations persist in an encrypted local state file under the platform app-data directory.
 
 ## RCON Notes
 
 - RCON is optional and does not block the app from starting.
-- The console popup is enabled only when all three RCON vars are present and valid.
+- The console popup is enabled only for saved servers that include host, port, and password.
 - The app sends request/response RCON commands; it does not stream the live server console.
+
+## Provider API Notes
+
+- GameHostBros uses bearer-token auth with `Accept: application/vnd.wisp.v1+json`.
+- The app uses the fixed GameHostBros panel base URL `https://panel.gamehostbros.com`.
+- The home screen uses the provider API for discovery, manual refresh, and power actions.
+- World management remains SFTP-based and does not use the provider file-manager endpoints.
 
 ## Make Targets
 
@@ -40,7 +49,7 @@ Documents runtime setup for running the app locally with `uv`.
 
 ## Dependency Rules
 
-- Keep environment key names aligned with `src/mc_server_manager/config/settings.py`.
+- Keep startup and storage docs aligned with `src/mc_server_manager/main.py` and `src/mc_server_manager/infrastructure/app_state_store.py`.
 
 ## Change Notes
 

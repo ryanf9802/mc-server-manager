@@ -1,9 +1,12 @@
 # Services
 
 ## Purpose
-Contains business workflows for world naming, listing, editing, activation, hashing, and RCON.
+Contains business workflows for encrypted app-state, world naming, listing, editing, activation, hashing, and RCON.
 
 ## Contents
+- `app_state.py`: in-memory encrypted app-state workflow and server uniqueness rules.
+- `server_runtime.py`: builds provider, SFTP, and RCON service stacks for a selected server.
+- `sftp_connection_address.py`: GameHostBros SFTP connection-address parsing and normalization.
 - `world_name.py`: immutable slug generation.
 - `hashing.py`: content hashing.
 - `world_catalog.py`: list/load and status reconciliation.
@@ -15,4 +18,4 @@ Contains business workflows for world naming, listing, editing, activation, hash
 - Services may depend on domain, validation, and infrastructure-facing repositories.
 
 ## Change Notes
-- Keep CRUD and activation rules centralized here instead of scattering them across the GUI.
+- Keep CRUD, activation, and saved-server rules centralized here instead of scattering them across the GUI.

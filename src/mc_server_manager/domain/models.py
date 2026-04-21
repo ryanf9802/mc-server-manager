@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
 from enum import StrEnum
 
 
@@ -78,6 +79,128 @@ class RconCommandResult:
     response_text: str
     succeeded: bool
     executed_at: datetime
+
+
+class HostingProvider(StrEnum):
+    GAMEHOSTBROS = "gamehostbros"
+
+    @property
+    def label(self) -> str:
+        return {
+            HostingProvider.GAMEHOSTBROS: "GameHostBros",
+        }[self]
+
+    @property
+    def default_panel_url(self) -> str:
+        return {
+            HostingProvider.GAMEHOSTBROS: "https://panel.gamehostbros.com",
+        }[self]
+
+
+class ProviderPowerSignal(StrEnum):
+    START = "start"
+    STOP = "stop"
+    RESTART = "restart"
+    KILL = "kill"
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderConnection:
+    provider: HostingProvider
+    api_token: str
+    server_id: str
+    server_uuid: str
+    server_name: str
+    panel_url: str = ""
+
+    @property
+    def resolved_panel_url(self) -> str:
+        configured = self.panel_url.strip()
+        if configured:
+            return configured.rstrip("/")
+        return self.provider.default_panel_url
+
+
+@dataclass(frozen=True, slots=True)
+class SftpConnectionSettings:
+    host: str
+    port: int
+    username: str
+    password: str
+    server_root: str
+
+    @property
+    def normalized_server_root(self) -> str:
+        stripped = self.server_root.strip()
+        if not stripped:
+            return "/"
+        normalized = stripped.rstrip("/")
+        return normalized or "/"
+
+
+@dataclass(frozen=True, slots=True)
+class RconConnectionSettings:
+    host: str
+    port: int
+    password: str
+
+    @property
+    def endpoint(self) -> str:
+        return f"{self.host}:{self.port}"
+
+
+@dataclass(frozen=True, slots=True)
+class StoredServerConfig:
+    local_id: str
+    display_name: str
+    provider: ProviderConnection
+    sftp: SftpConnectionSettings | None = None
+    rcon: RconConnectionSettings | None = None
+    notes: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class AppState:
+    servers: tuple[StoredServerConfig, ...] = ()
+    selected_server_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderServerSummary:
+    server_id: str
+    server_uuid: str
+    name: str
+    description: str
+    current_state: str | None = None
+
+    @property
+    def label(self) -> str:
+        return self.name or self.server_id
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderServerResources:
+    current_state: str
+    memory_bytes: int | None = None
+    cpu_absolute: float | None = None
+    disk_bytes: int | None = None
+    network_rx_bytes: int | None = None
+    network_tx_bytes: int | None = None
+    players_online: int | None = None
+    players_max: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SelectedServerStatus:
+    summary: ProviderServerSummary
+    resources: ProviderServerResources
+
+
+@dataclass(frozen=True, slots=True)
+class EncryptedEnvelope:
+    schema_version: int
+    salt_b64: str
+    ciphertext_b64: str
 
 
 def utc_now() -> datetime:

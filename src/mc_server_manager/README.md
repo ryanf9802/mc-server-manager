@@ -1,15 +1,15 @@
 # Application Package
 
 ## Purpose
-Defines the full Python app, including configuration loading, domain models, services, infrastructure, validation, and GUI.
+Defines the full Python app, including encrypted app-state startup, domain models, services, infrastructure, validation, and GUI.
 
 ## Contents
-- `config/`: settings and `.env` loading.
+- `config/`: typed connection settings aliases.
 - `domain/`: dataclasses and enums.
 - `services/`: business workflows.
-- `infrastructure/`: remote paths and SFTP-backed persistence.
+- `infrastructure/`: provider API clients, encrypted app-state, remote paths, and SFTP-backed persistence.
 - `validation/`: file validators.
-- `gui/`: tkinter UI, including the optional RCON console popup.
+- `gui/`: tkinter UI for the home screen, discovery/settings dialogs, world management, and RCON.
 - `main.py`: package entrypoint.
 
 ## Dependency Rules

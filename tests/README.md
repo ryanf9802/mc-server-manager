@@ -1,7 +1,7 @@
 # Tests
 
 ## Purpose
-Contains automated coverage for pure logic and opt-in SFTP integration behavior.
+Contains automated coverage for encrypted app state, provider adapters, pure logic, and opt-in SFTP integration behavior.
 
 ## Contents
 - `unit/`: deterministic unit and service tests.
@@ -13,4 +13,3 @@ Contains automated coverage for pure logic and opt-in SFTP integration behavior.
 
 ## Change Notes
 - Keep new test directories documented before adding files under them.
-

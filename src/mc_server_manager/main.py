@@ -2,57 +2,108 @@ from __future__ import annotations
 
 import sys
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 
-from mc_server_manager.config.dotenv_loader import DotEnvLoader
 from mc_server_manager.gui.main_window import MainWindow
-from mc_server_manager.infrastructure.remote_paths import RemotePaths
-from mc_server_manager.infrastructure.repositories import (
-    SftpLiveConfigStore,
-    SftpWorldRepository,
-)
-from mc_server_manager.infrastructure.sftp_gateway import SftpGateway
-from mc_server_manager.services.activation import ActivationService
-from mc_server_manager.services.rcon import RconService
-from mc_server_manager.services.world_catalog import WorldCatalogService
-from mc_server_manager.services.world_editor import WorldEditorService
-from mc_server_manager.validation.server_properties import ServerPropertiesValidator
-from mc_server_manager.validation.whitelist import WhitelistValidator
+from mc_server_manager.infrastructure.app_state_store import AppStateStore
+from mc_server_manager.services.app_state import AppStateService
 
 
 def main() -> int:
+    root = tk.Tk()
+    root.withdraw()
     try:
-        loader = DotEnvLoader()
-        settings = loader.load()
-        paths = RemotePaths(settings.sftp)
-        gateway = SftpGateway(settings.sftp)
-        world_repository = SftpWorldRepository(gateway, paths)
-        live_config_store = SftpLiveConfigStore(gateway, paths)
-        main_window = MainWindow(
-            world_catalog_service=WorldCatalogService(world_repository, live_config_store),
-            world_editor_service=WorldEditorService(
-                world_repository,
-                live_config_store,
-                ServerPropertiesValidator(),
-                WhitelistValidator(),
-            ),
-            activation_service=ActivationService(world_repository, live_config_store),
-            rcon_service=RconService(settings.rcon, settings.rcon_unavailable_reason),
-        )
+        store = AppStateStore()
+        password, state = _load_or_initialize_state(root, store)
+        if password is None or state is None:
+            root.destroy()
+            return 0
+
+        main_window = MainWindow(root, AppStateService(store, state, password))
+        main_window.run()
+        return 0
     except Exception as exc:  # noqa: BLE001
-        _show_startup_error(str(exc))
+        _show_startup_error(str(exc), root)
+        try:
+            root.destroy()
+        except Exception:  # noqa: BLE001
+            pass
         return 1
 
-    main_window.run()
-    return 0
+
+def _load_or_initialize_state(root: tk.Tk, store: AppStateStore):
+    if not store.exists():
+        return _create_new_state(root, store)
+    return _unlock_existing_state(root, store)
 
 
-def _show_startup_error(message: str) -> None:
+def _create_new_state(root: tk.Tk, store: AppStateStore):
+    while True:
+        password = simpledialog.askstring(
+            "Create Application Password",
+            "Create an application password to encrypt the local server library.",
+            parent=root,
+            show="*",
+        )
+        if password is None:
+            return None, None
+        if not password.strip():
+            messagebox.showerror(
+                "Minecraft Server Manager",
+                "Application password cannot be empty.",
+                parent=root,
+            )
+            continue
+        confirmation = simpledialog.askstring(
+            "Confirm Application Password",
+            "Re-enter the application password.",
+            parent=root,
+            show="*",
+        )
+        if confirmation is None:
+            return None, None
+        if confirmation != password:
+            messagebox.showerror(
+                "Minecraft Server Manager",
+                "Passwords did not match. Try again.",
+                parent=root,
+            )
+            continue
+        state = store.initialize(password)
+        return password, state
+
+
+def _unlock_existing_state(root: tk.Tk, store: AppStateStore):
+    while True:
+        password = simpledialog.askstring(
+            "Unlock Application State",
+            "Enter the application password to unlock saved server configurations.",
+            parent=root,
+            show="*",
+        )
+        if password is None:
+            return None, None
+        try:
+            return password, store.load(password)
+        except ValueError as exc:
+            retry = messagebox.askretrycancel(
+                "Minecraft Server Manager",
+                str(exc),
+                parent=root,
+            )
+            if not retry:
+                return None, None
+
+
+def _show_startup_error(message: str, root: tk.Tk | None = None) -> None:
     try:
-        root = tk.Tk()
-        root.withdraw()
+        if root is None:
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror("Minecraft Server Manager", message, parent=root)
+            root.destroy()
+            return
         messagebox.showerror("Minecraft Server Manager", message, parent=root)
-        root.destroy()
     except Exception:  # noqa: BLE001
         print(message, file=sys.stderr)
 

@@ -56,6 +56,30 @@ def test_rcon_service_executes_command_after_login() -> None:
     assert client.received_commands == ["list"]
 
 
+def test_rcon_service_strips_terminal_color_suffixes() -> None:
+    client = FakeRconClient(command_response="There are 0 of a max of 2 players online: 0[0m")
+    service = RconService(
+        RconSettings(host="example.org", port=27065, password="secret"),
+        client_factory=lambda host, port: client,
+    )
+
+    result = service.execute("list")
+
+    assert result.response_text == "There are 0 of a max of 2 players online: 0"
+
+
+def test_rcon_service_strips_ansi_escape_sequences() -> None:
+    client = FakeRconClient(command_response="\x1b[32mServer online\x1b[0m")
+    service = RconService(
+        RconSettings(host="example.org", port=27065, password="secret"),
+        client_factory=lambda host, port: client,
+    )
+
+    result = service.execute("say test")
+
+    assert result.response_text == "Server online"
+
+
 def test_rcon_service_raises_on_auth_failure() -> None:
     service = RconService(
         RconSettings(host="example.org", port=27065, password="secret"),

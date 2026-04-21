@@ -4,7 +4,10 @@
 Implements the tkinter desktop interface and keeps presentation state separate from service logic.
 
 ## Contents
-- `main_window.py`: world list, editors, commands, and background task handling.
+- `main_window.py`: multi-server home screen with provider controls and panel launchers.
+- `add_server_window.py`: provider discovery flow for onboarding a new server.
+- `server_settings_window.py`: per-server provider, provider-specific SFTP, and RCON configuration editor.
+- `world_management_window.py`: SFTP-backed world CRUD editor for a selected server.
 - `console_window.py`: optional popup for RCON command execution.
 
 ## Dependency Rules

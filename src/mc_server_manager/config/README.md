@@ -1,14 +1,13 @@
 # Config
 
 ## Purpose
-Owns runtime settings and `.env` loading.
+Owns typed connection setting aliases shared by infrastructure and service code.
 
 ## Contents
-- `settings.py`: strongly typed SFTP, RCON, and app settings.
-- `dotenv_loader.py`: default path resolution and `.env` parsing.
+- `settings.py`: aliases for SFTP and RCON connection settings dataclasses.
 
 ## Dependency Rules
-- Keep runtime config loading free of GUI concerns.
+- Keep typed setting aliases thin and free of GUI or storage concerns.
 
 ## Change Notes
-- Update this directory when required or optional env vars or lookup rules change.
+- Update this directory when shared connection setting types move or are renamed.

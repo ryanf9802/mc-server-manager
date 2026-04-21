@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import re
 from typing import Protocol, cast
 
 from mctools import RCONClient
 
 from mc_server_manager.config.settings import RconSettings
 from mc_server_manager.domain.models import RconCommandResult, utc_now
+
+
+_ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+_BARE_COLOR_CODE_PATTERN = re.compile(r"\[(?:\d{1,3};)*\d{1,3}[A-Za-z]")
 
 
 class RconClientProtocol(Protocol):
@@ -59,7 +64,7 @@ class RconService:
             self.close()
             raise ConnectionError(f"RCON command failed: {exc}") from exc
 
-        normalized_response = response.strip() or "(no response)"
+        normalized_response = _normalize_rcon_response(response)
         return RconCommandResult(
             command=cleaned_command,
             response_text=normalized_response,
@@ -116,3 +121,10 @@ class RconService:
     @staticmethod
     def _default_client_factory(host: str, port: int) -> RconClientProtocol:
         return cast(RconClientProtocol, RCONClient(host, port=port))
+
+
+def _normalize_rcon_response(response: str) -> str:
+    without_ansi = _ANSI_ESCAPE_PATTERN.sub("", response)
+    without_bare_codes = _BARE_COLOR_CODE_PATTERN.sub("", without_ansi)
+    normalized = without_bare_codes.strip()
+    return normalized or "(no response)"

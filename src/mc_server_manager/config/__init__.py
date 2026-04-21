@@ -1,1 +1,1 @@
-"""Runtime configuration models and loaders."""
+"""Typed connection setting aliases."""

@@ -10,15 +10,20 @@ from mc_server_manager.services.rcon import RconService
 
 
 class ConsoleWindow:
-    def __init__(self, parent: tk.Tk, rcon_service: RconService) -> None:
-        self._parent = parent
+    def __init__(
+        self,
+        parent: tk.Misc,
+        rcon_service: RconService,
+        server_display_name: str | None = None,
+    ) -> None:
         self._rcon_service = rcon_service
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._busy = False
         self._closed = False
 
         self.window = tk.Toplevel(parent)
-        self.window.title("RCON Console")
+        title_suffix = "" if not server_display_name else f": {server_display_name}"
+        self.window.title(f"RCON Console{title_suffix}")
         self.window.geometry("920x560")
         self.window.minsize(720, 420)
         self.window.protocol("WM_DELETE_WINDOW", self.close)
