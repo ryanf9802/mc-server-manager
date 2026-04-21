@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from concurrent.futures import Future, ThreadPoolExecutor
 from tkinter import messagebox, ttk
@@ -21,6 +22,9 @@ from mc_server_manager.services.sftp_connection_address import (
     build_gamehostbros_sftp_settings,
     format_gamehostbros_sftp_address,
 )
+from mc_server_manager.infrastructure.runtime_logging import log_background_exception
+
+logger = logging.getLogger(__name__)
 
 
 class ServerSettingsWindow:
@@ -288,6 +292,11 @@ class ServerSettingsWindow:
                 result = future.result()
             except Exception as exc:  # noqa: BLE001
                 message = str(exc)
+                log_background_exception(
+                    logger,
+                    f"{start_message} server={self.display_name_var.get().strip() or self._server.display_name}",
+                    exc,
+                )
                 messagebox.showerror("Server Settings", message, parent=self.window)
                 self._set_status(message)
                 return

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib import metadata
 import json
 import sys
 from pathlib import Path
@@ -49,3 +50,23 @@ def _candidate_paths() -> tuple[Path, ...]:
 
     paths.append(Path(__file__).resolve().parents[3] / "build-info.json")
     return tuple(dict.fromkeys(paths))
+
+
+def runtime_diagnostics() -> dict[str, str]:
+    build_info = load_build_info()
+    return {
+        "release_tag": build_info.release_tag,
+        "commit_sha": build_info.commit_sha or "<unknown>",
+        "repo": build_info.repo_full_name or "<unknown>",
+        "executable": str(Path(sys.executable).resolve()),
+        "frozen": str(bool(getattr(sys, "frozen", False))),
+        "paramiko_version": _package_version("paramiko"),
+        "cryptography_version": _package_version("cryptography"),
+    }
+
+
+def _package_version(package_name: str) -> str:
+    try:
+        return metadata.version(package_name)
+    except metadata.PackageNotFoundError:
+        return "<unavailable>"

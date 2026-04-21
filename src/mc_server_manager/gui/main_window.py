@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import tkinter as tk
 import webbrowser
@@ -21,6 +22,11 @@ from mc_server_manager.gui.add_server_window import AddServerWindow
 from mc_server_manager.gui.console_window import ConsoleWindow
 from mc_server_manager.gui.server_settings_window import ServerSettingsWindow
 from mc_server_manager.gui.world_management_window import WorldManagementWindow
+from mc_server_manager.infrastructure.runtime_logging import (
+    get_logs_dir,
+    log_background_exception,
+    open_logs_dir,
+)
 from mc_server_manager.services.app_state import AppStateService
 from mc_server_manager.services.server_runtime import (
     create_provider_client,
@@ -28,6 +34,8 @@ from mc_server_manager.services.server_runtime import (
     create_world_services,
 )
 from mc_server_manager.services.updates import UpdateService
+
+logger = logging.getLogger(__name__)
 
 
 class MainWindow:
@@ -256,6 +264,7 @@ class MainWindow:
         status_bar.columnconfigure(0, weight=1)
         status_bar.columnconfigure(1, weight=0)
         status_bar.columnconfigure(2, weight=0)
+        status_bar.columnconfigure(3, weight=0)
         ttk.Label(status_bar, textvariable=self.status_message_var).grid(
             row=0, column=0, sticky="w"
         )
@@ -268,6 +277,12 @@ class MainWindow:
             command=self.update_application,
         )
         self.update_button.grid(row=0, column=2, sticky="e")
+        self.open_logs_button = ttk.Button(
+            status_bar,
+            text="Open Logs Folder",
+            command=self.open_logs_folder,
+        )
+        self.open_logs_button.grid(row=0, column=3, sticky="e", padx=(8, 0))
 
     def _bind_events(self) -> None:
         self.server_listbox.bind("<<ListboxSelect>>", self._on_server_selected)
@@ -417,6 +432,7 @@ class MainWindow:
         self.console_button.configure(state=state if rcon_enabled else "disabled")
         self.provider_panel_button.configure(state=state if provider_panel_enabled else "disabled")
         self.update_button.configure(state=state)
+        self.open_logs_button.configure(state=state)
 
     def _on_server_selected(self, _event: tk.Event) -> None:
         server = self._selected_server()
@@ -631,6 +647,7 @@ class MainWindow:
         services = create_world_services(server)
         window = WorldManagementWindow(self.root, server, *services)
         self._world_windows[server.local_id] = window
+        logger.info("Opening World Management for server=%s", server.display_name)
         window.present()
 
     def open_rcon_console(self) -> None:
@@ -654,6 +671,7 @@ class MainWindow:
 
         console = ConsoleWindow(self.root, create_rcon_service(server), server.display_name)
         self._console_windows[server.local_id] = console
+        logger.info("Opening RCON console for server=%s", server.display_name)
         console.present()
 
     def open_provider_panel(self) -> None:
@@ -744,6 +762,21 @@ class MainWindow:
         }
         return bool(self._world_windows or self._console_windows)
 
+    def open_logs_folder(self) -> None:
+        try:
+            logs_dir = open_logs_dir()
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Failed to open logs folder: %s", exc)
+            messagebox.showerror(
+                "Minecraft Server Manager",
+                f"Failed to open logs folder.\n\nSee logs in {get_logs_dir()} for details.",
+                parent=self.root,
+            )
+            self._set_status(f"Failed to open logs folder: {exc}")
+            return
+        logger.info("Opened logs folder at %s", logs_dir)
+        self._set_status(f"Opened logs folder at {logs_dir}.")
+
     def _run_background(self, task, on_success, *, start_message: str) -> None:
         if self._busy:
             return
@@ -766,6 +799,7 @@ class MainWindow:
                 result = future.result()
             except Exception as exc:  # noqa: BLE001
                 message = str(exc)
+                log_background_exception(logger, start_message, exc)
                 messagebox.showerror("Minecraft Server Manager", message, parent=self.root)
                 self._set_status(message)
                 return

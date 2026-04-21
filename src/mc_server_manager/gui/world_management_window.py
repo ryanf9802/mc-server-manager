@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
@@ -13,6 +14,9 @@ from mc_server_manager.domain.models import (
     WorldManifest,
     WorldStatus,
 )
+from mc_server_manager.infrastructure.runtime_logging import log_background_exception
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -517,6 +521,14 @@ class WorldManagementWindow:
             try:
                 result = future.result()
             except Exception as exc:  # noqa: BLE001
+                log_background_exception(
+                    logger,
+                    (
+                        f"{start_message} server={self._server.display_name} "
+                        f"selected_slug={self._selected_slug or '<none>'}"
+                    ),
+                    exc,
+                )
                 self._set_status(str(exc))
                 messagebox.showerror("World Management", str(exc), parent=self.window)
                 return

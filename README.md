@@ -26,6 +26,7 @@ Cross-platform Python desktop app for managing multiple hosted Minecraft servers
 - Each saved server entry persists inside an encrypted local app-state file protected by the application password.
 - Export/import writes a single encrypted server configuration file per server.
 - RCON is optional per saved server. When absent, the RCON panel stays disabled for that server.
+- Runtime logs are written under the platform log/app-data directory, and the home screen can open the logs folder directly.
 
 ## Dev Commands
 

@@ -22,6 +22,8 @@ Documents runtime setup for running the app locally with `uv`.
 - Saved server configurations persist in an encrypted local state file under the platform app-data directory.
 - Managed Windows installs live under `%LOCALAPPDATA%\mc-server-manager\install\current`.
 - In-app updates replace the managed install in place and keep the encrypted app-state file intact.
+- Runtime logs are written under `%LOCALAPPDATA%\mc-server-manager\logs`.
+- The home screen includes `Open Logs Folder` for diagnostics after provider, SFTP, RCON, or update failures.
 
 ## Windows Packaging
 

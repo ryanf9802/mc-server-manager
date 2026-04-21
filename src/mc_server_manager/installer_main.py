@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import subprocess
 import sys
 import tempfile
@@ -16,12 +17,17 @@ from mc_server_manager.infrastructure.installations import (
     WindowsInstallationManager,
 )
 from mc_server_manager.infrastructure.releases import GitHubReleaseClient
+from mc_server_manager.infrastructure.runtime_logging import configure_logging, get_logs_dir
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> int:
+    log_path = configure_logging("installer.log")
     root = tk.Tk()
     root.withdraw()
     try:
+        logger.info("Installer/updater starting with logs at %s", log_path)
         args = _parse_args()
         build_info = load_build_info()
         if build_info.is_dev:
@@ -32,6 +38,7 @@ def main() -> int:
         layout = InstallLayoutResolver().resolve()
         release_client = GitHubReleaseClient(build_info.repo_owner, build_info.repo_name)
         if args.wait_pid is not None:
+            logger.info("Waiting for process %s to exit before continuing update", args.wait_pid)
             _wait_for_exit(args.wait_pid)
 
         release = (
@@ -57,6 +64,7 @@ def main() -> int:
             extract_dir,
             release_tag=release.tag_name,
         )
+        logger.info("Installed release %s to %s", release.tag_name, layout.current_dir)
         _launch(app_path)
         if not args.silent:
             messagebox.showinfo(
@@ -67,6 +75,7 @@ def main() -> int:
         root.destroy()
         return 0
     except Exception as exc:  # noqa: BLE001
+        logger.exception("Installer/updater failed: %s", exc)
         _show_error(str(exc), root)
         try:
             root.destroy()
@@ -123,6 +132,7 @@ def _launch(app_path: Path) -> None:
 
 
 def _show_error(message: str, root: tk.Tk) -> None:
+    message = f"{message}\n\nSee logs in {get_logs_dir()} for details."
     try:
         messagebox.showerror("Minecraft Server Manager", message, parent=root)
     except Exception:  # noqa: BLE001

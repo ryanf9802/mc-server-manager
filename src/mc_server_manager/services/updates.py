@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
@@ -10,6 +11,8 @@ from pathlib import Path
 from mc_server_manager.domain.models import BuildInfo, GitHubRelease, UpdateAvailability
 from mc_server_manager.infrastructure.installations import InstallLayoutResolver
 from mc_server_manager.infrastructure.releases import GitHubReleaseClient
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateService:
@@ -38,6 +41,7 @@ class UpdateService:
 
     def check_for_updates(self) -> UpdateAvailability:
         if self._build_info.is_dev:
+            logger.info("Update check skipped because current build is a dev build.")
             return UpdateAvailability(
                 current_build=self._build_info,
                 latest_release=None,
@@ -46,6 +50,10 @@ class UpdateService:
                 message="This is a development build. Updates are available only from the installed Windows app.",
             )
         if not self.is_managed_install():
+            logger.warning(
+                "Update check skipped because executable is outside managed install: %s",
+                self._current_executable,
+            )
             return UpdateAvailability(
                 current_build=self._build_info,
                 latest_release=None,
@@ -55,6 +63,11 @@ class UpdateService:
             )
         release_client = self._release_client()
         latest_release = release_client.latest_release()
+        logger.info(
+            "Checked latest release tag=%s against current tag=%s",
+            latest_release.tag_name,
+            self._build_info.release_tag,
+        )
         if latest_release.tag_name == self._build_info.release_tag:
             return UpdateAvailability(
                 current_build=self._build_info,
@@ -83,6 +96,12 @@ class UpdateService:
         temp_dir = Path(tempfile.mkdtemp(prefix="mc-server-manager-updater-"))
         temp_installer = temp_dir / installer_path.name
         shutil.copy2(installer_path, temp_installer)
+        logger.info(
+            "Launching updater helper from %s for release_tag=%s wait_pid=%s",
+            temp_installer,
+            release.tag_name,
+            wait_pid,
+        )
 
         command = [
             str(temp_installer),

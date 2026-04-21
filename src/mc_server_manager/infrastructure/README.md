@@ -9,6 +9,7 @@ Contains provider API clients, encrypted local state storage, remote path rules,
 - `installations.py`: managed Windows install layout, install metadata, and shortcut creation.
 - `provider_clients.py`: provider-agnostic client interfaces plus GameHostBros implementation.
 - `releases.py`: public GitHub release API client and asset download support.
+- `runtime_logging.py`: persistent app-data log setup, log-folder helpers, and uncaught exception hooks.
 - `remote_paths.py`: remote file layout and path helpers.
 - `sftp_gateway.py`: Paramiko session management and file primitives.
 - `repositories.py`: world repository and live config store implementations.
