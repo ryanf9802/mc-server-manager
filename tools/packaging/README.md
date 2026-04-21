@@ -2,12 +2,11 @@
 
 ## Purpose
 
-Contains Windows packaging assets for producing a single-file desktop executable with PyInstaller.
+Contains Windows packaging assets for producing release artifacts used by the installer and in-app updater.
 
 ## Contents
 
-- `build_windows_single_exe.py`: Windows-only wrapper that runs the repo's PyInstaller build with fixed output paths.
-- `mc_server_manager.spec`: PyInstaller spec for the single-file `mc-server-manager.exe` build.
+- `build_windows_release.py`: Windows-only wrapper that builds the app exe, installer exe, release bundle zip, and checksums.
 
 ## Dependency Rules
 

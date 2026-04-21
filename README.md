@@ -32,19 +32,21 @@ Cross-platform Python desktop app for managing multiple hosted Minecraft servers
 - Format: `uv run ruff format .`
 - Type-check: `uv run ty check`
 - Test: `uv run pytest`
-- Build a Windows single-file exe: `uv run python tools/packaging/build_windows_single_exe.py`
+- Build Windows release artifacts: `uv run python tools/packaging/build_windows_release.py`
 - Start in the background: `make up`
 - Stop the background app: `make down`
 - Check runtime status: `make status`
 - Tail recent logs: `make logs`
 
-## Windows Exe Flow
+## Windows Install And Update Flow
 
 1. On a Windows machine, run `uv sync --dev`.
-2. Build the single-file executable with `uv run python tools/packaging/build_windows_single_exe.py`.
-3. Pick up the output at `dist/windows-single/mc-server-manager.exe`.
-4. The build is Windows-only; PyInstaller does not produce a Windows `.exe` from Linux/WSL.
-5. The packaged app keeps using the same encrypted app-state location under the platform app-data directory.
+2. Build the Windows release assets with `uv run python tools/packaging/build_windows_release.py`.
+3. The release output lands in `dist/windows-release/` and includes:
+   `mc-server-manager-installer.exe`, `mc-server-manager-windows-x64.zip`, and `SHA256SUMS.txt`.
+4. The installer manages a per-user install under `%LOCALAPPDATA%\mc-server-manager\install\current`.
+5. Encrypted app state stays outside the install directory in the platform app-data location, so in-place updates do not remove saved servers.
+6. The build is Windows-only; PyInstaller does not produce a Windows `.exe` from Linux/WSL.
 
 ## Dependency Rules
 

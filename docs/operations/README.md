@@ -20,13 +20,16 @@ Documents runtime setup for running the app locally with `uv`.
 - For `GameHostBros`, the panel base URL is hard-coded to `https://panel.gamehostbros.com`; users do not enter it manually.
 - For `GameHostBros` SFTP, the settings window accepts `Connection Address`, `Username`, and `Password`. The app accepts either `sftp://host:port` or `host:port` and always saves `/` as the root.
 - Saved server configurations persist in an encrypted local state file under the platform app-data directory.
+- Managed Windows installs live under `%LOCALAPPDATA%\mc-server-manager\install\current`.
+- In-app updates replace the managed install in place and keep the encrypted app-state file intact.
 
 ## Windows Packaging
 
 - Install packaging dependencies on Windows with `uv sync --dev`.
-- Build the single-file executable with `uv run python tools/packaging/build_windows_single_exe.py`.
-- The build output is `dist/windows-single/mc-server-manager.exe`.
-- The same build can be launched through `make package-windows-single` where `make` is available.
+- Build the release assets with `uv run python tools/packaging/build_windows_release.py`.
+- The build output is `dist/windows-release/`.
+- Release assets are `mc-server-manager-installer.exe`, `mc-server-manager-windows-x64.zip`, and `SHA256SUMS.txt`.
+- The same build can be launched through `make package-windows-release` where `make` is available.
 - PyInstaller builds are platform-specific, so create the Windows `.exe` on Windows rather than WSL/Linux.
 
 ## RCON Notes

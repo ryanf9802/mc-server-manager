@@ -4,7 +4,7 @@ PID_FILE := $(RUNTIME_DIR)/mc-server-manager.pid
 LOG_FILE := $(RUNTIME_DIR)/mc-server-manager.log
 UV_CACHE_DIR := $(RUNTIME_DIR)/uv-cache
 
-.PHONY: up down status logs package-windows-single
+.PHONY: up down status logs package-windows-single package-windows-release
 
 up:
 	@mkdir -p $(RUNTIME_DIR) $(UV_CACHE_DIR)
@@ -59,4 +59,7 @@ logs:
 	fi
 
 package-windows-single:
-	@uv run python tools/packaging/build_windows_single_exe.py
+	@uv run python tools/packaging/build_windows_release.py
+
+package-windows-release:
+	@uv run python tools/packaging/build_windows_release.py
