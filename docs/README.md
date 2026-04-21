@@ -1,16 +1,18 @@
 # Docs
 
 ## Purpose
-Holds human-facing project documentation that should stay stable even when implementation details move.
+
+Holds human-facing documentation for product behavior and operational setup.
 
 ## Contents
-- `product/`: product behavior, UX intent, and feature scope.
-- `operations/`: runtime setup, env vars, and operational workflows.
+
+- `product/`: user-facing behavior and workflow expectations.
+- `operations/`: setup, runtime configuration, and troubleshooting notes.
 
 ## Dependency Rules
-- Keep docs descriptive rather than duplicating code comments.
-- Link back to source directories when describing implementation ownership.
+
+- Keep docs aligned with the source tree and remote storage contract.
 
 ## Change Notes
-- Add a new subdirectory README before introducing more docs under it.
 
+- Add a local `README.md` before creating any new docs subdirectory.

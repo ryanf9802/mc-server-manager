@@ -1,17 +1,14 @@
 # Tools
 
 ## Purpose
-
-Contains repository maintenance scripts and helper tooling for contributors.
+Contains lightweight contributor tooling for repository maintenance.
 
 ## Contents
-
-- `verify-directory-readmes/`: guard that ensures every committed directory has a local README.
+- `verify_directory_readmes/`: README coverage guard.
 
 ## Dependency Rules
-
-- Tools should support contributor workflows without modifying production behavior.
+- Tooling should stay dependency-light and safe to run locally.
 
 ## Change Notes
+- Add a directory README before introducing another tool subtree.
 
-- Add tool-specific READMEs for any new maintenance workflow.

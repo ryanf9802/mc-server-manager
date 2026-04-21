@@ -1,15 +1,15 @@
 # Tests
 
 ## Purpose
-Holds automated coverage for core rules and remote integration behavior.
+Contains automated coverage for pure logic and opt-in SFTP integration behavior.
 
 ## Contents
-- `McServerManager.UnitTests/`: pure logic coverage.
-- `McServerManager.IntegrationTests/`: opt-in remote SFTP integration coverage.
+- `unit/`: deterministic unit and service tests.
+- `integration/`: environment-gated integration coverage.
 
 ## Dependency Rules
-- Unit tests should prefer fakes and avoid network access.
-- Integration tests may use network resources only when explicitly configured through env vars.
+- Keep unit tests network-free.
+- Integration tests must skip unless explicitly configured.
 
 ## Change Notes
 - Keep new test directories documented before adding files under them.

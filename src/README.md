@@ -2,20 +2,17 @@
 
 ## Purpose
 
-Contains the production code split by architectural responsibility.
+Contains the production Python package organized by responsibility.
 
 ## Contents
 
-- `McServerManager.Desktop/`: WinUI shell and feature-facing UI.
-- `McServerManager.Application/`: use-case orchestration and interfaces.
-- `McServerManager.Domain/`: pure domain models and value objects.
-- `McServerManager.Infrastructure/`: SFTP, env loading, and hashing adapters.
+- `mc_server_manager/`: application package root.
 
 ## Dependency Rules
 
-- Dependencies flow inward: Desktop -> Application -> Domain.
-- Infrastructure implements Application-facing interfaces and references Domain as needed.
+- GUI code depends on services, not on raw Paramiko calls.
+- Infrastructure depends on config and domain types, not on tkinter.
 
 ## Change Notes
 
-- Preserve single responsibility across projects and avoid pushing UI concerns into services.
+- Keep the package nested and intentional; avoid a flat utility bucket.

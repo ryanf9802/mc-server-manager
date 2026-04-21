@@ -1,16 +1,19 @@
 # Product Docs
 
 ## Purpose
-Documents the intended behavior of world management and activation from the user's perspective.
+
+Describes the intended behavior of world CRUD, validation, and activation.
 
 ## Contents
-- World creation clones the live remote config pair.
-- Save updates only the managed remote copy.
-- Activate replaces the live remote config pair.
+
+- A world is a remote-managed pair of `server.properties` and `whitelist.json`.
+- Saving updates only the managed copy.
+- Activating replaces the live files in the remote server root.
 
 ## Dependency Rules
-- Product rules here should match view-model behavior and application service rules.
+
+- Product behavior described here should match the GUI and service layer.
 
 ## Change Notes
-- Update this file when CRUD flow, statuses, or activation behavior changes.
 
+- Update this file when world lifecycle rules or statuses change.
