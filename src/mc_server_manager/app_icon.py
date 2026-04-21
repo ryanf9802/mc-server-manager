@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import logging
 import sys
-import tkinter as tk
 from pathlib import Path
+from typing import Protocol
 
 
 logger = logging.getLogger(__name__)
 
 _ICON_NAME = "app.ico"
+
+
+class SupportsIconBitmap(Protocol):
+    def iconbitmap(self, bitmap: str | None = None, default: str | None = None) -> object: ...
 
 
 def resolve_app_icon_path() -> Path | None:
@@ -18,7 +22,7 @@ def resolve_app_icon_path() -> Path | None:
     return None
 
 
-def apply_window_icon(window: tk.Misc) -> Path | None:
+def apply_window_icon(window: SupportsIconBitmap) -> Path | None:
     if sys.platform != "win32":
         return None
 

@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+from typing import cast
 
 
 def _load_build_windows_release():
@@ -37,8 +38,7 @@ def test_run_pyinstaller_includes_icon_asset_flags(tmp_path: Path, monkeypatch) 
         tmp_path / "src" / "mc_server_manager" / "main.py",
     )
 
-    command = captured["command"]
-    assert isinstance(command, list)
+    command = cast(list[str], captured["command"])
     assert captured["check"] is True
     assert captured["cwd"] == tmp_path
     assert "--icon" in command

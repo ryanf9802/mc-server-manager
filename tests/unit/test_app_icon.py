@@ -7,8 +7,10 @@ class FakeWindow:
     def __init__(self) -> None:
         self.default_icons: list[str] = []
 
-    def iconbitmap(self, default: str) -> None:
-        self.default_icons.append(default)
+    def iconbitmap(self, bitmap: str | None = None, default: str | None = None) -> None:
+        del bitmap
+        if default is not None:
+            self.default_icons.append(default)
 
 
 def test_resolve_app_icon_path_prefers_pyinstaller_bundle(tmp_path: Path, monkeypatch) -> None:
