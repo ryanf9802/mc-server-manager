@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 from dataclasses import asdict
 from pathlib import Path
 
@@ -73,7 +74,8 @@ class WindowsInstallationManager:
         shortcut_path = Path(layout.start_menu_shortcut)
 
         root_dir.mkdir(parents=True, exist_ok=True)
-        Path(layout.staging_dir).mkdir(parents=True, exist_ok=True)
+        staging_root = Path(layout.staging_dir)
+        staging_root.mkdir(parents=True, exist_ok=True)
 
         current_source = extracted_bundle_dir / "mc-server-manager.exe"
         installer_source = extracted_bundle_dir / "mc-server-manager-installer.exe"
@@ -86,12 +88,27 @@ class WindowsInstallationManager:
         if not build_info_source.exists():
             raise ValueError("Update bundle is missing build-info.json.")
 
+        staged_current_dir = staging_root / f"current-{int(time.time() * 1000)}"
+        rollback_dir = staging_root / f"previous-{int(time.time() * 1000)}"
+
+        if staged_current_dir.exists():
+            _retry_file_operation(lambda: shutil.rmtree(staged_current_dir))
+        staged_current_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(current_source, staged_current_dir / current_source.name)
+        shutil.copy2(build_info_source, staged_current_dir / build_info_source.name)
+
+        if rollback_dir.exists():
+            _retry_file_operation(lambda: shutil.rmtree(rollback_dir))
         if current_dir.exists():
-            shutil.rmtree(current_dir)
-        current_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(current_source, current_dir / current_source.name)
-        shutil.copy2(build_info_source, current_dir / build_info_source.name)
+            _retry_file_operation(lambda: current_dir.replace(rollback_dir))
+        _retry_file_operation(lambda: staged_current_dir.replace(current_dir))
         shutil.copy2(installer_source, installer_path)
+
+        if rollback_dir.exists():
+            try:
+                _retry_file_operation(lambda: shutil.rmtree(rollback_dir))
+            except OSError:
+                pass
 
         self._create_start_menu_shortcut(shortcut_path, current_dir / current_source.name)
         self._metadata_store.save(
@@ -142,3 +159,30 @@ def _parse_datetime(value: str):
 
     normalized = value.replace("Z", "+00:00")
     return datetime.fromisoformat(normalized)
+
+
+def _retry_file_operation(
+    operation,
+    *,
+    timeout_seconds: float = 20.0,
+    initial_delay_seconds: float = 0.25,
+) -> None:
+    deadline = time.monotonic() + timeout_seconds
+    delay = initial_delay_seconds
+    last_error: OSError | None = None
+
+    while True:
+        try:
+            operation()
+            return
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            last_error = exc
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 1.5, 2.0)
+
+    if last_error is not None:
+        raise last_error
