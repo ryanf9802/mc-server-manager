@@ -15,6 +15,7 @@ from pathlib import Path
 APP_EXE_NAME = "mc-server-manager.exe"
 INSTALLER_EXE_NAME = "mc-server-manager-installer.exe"
 BUNDLE_NAME = "mc-server-manager-windows-x64.zip"
+ICON_ASSET_PATH = Path("src") / "mc_server_manager" / "assets" / "app.ico"
 
 
 def main() -> int:
@@ -87,6 +88,7 @@ def _run_pyinstaller(
     name: str,
     entrypoint: Path,
 ) -> None:
+    icon_path = _app_icon_path(repo_root)
     collect_all_modules = [
         "mctools",
         "paramiko",
@@ -113,13 +115,24 @@ def _run_pyinstaller(
         str(work_path),
         "--paths",
         str(repo_root / "src"),
+        "--icon",
+        str(icon_path),
         "--add-data",
         f"{build_info_path};.",
+        "--add-data",
+        f"{icon_path};mc_server_manager/assets",
     ]
     for module_name in collect_all_modules:
         command.extend(["--collect-all", module_name])
     command.append(str(entrypoint))
     subprocess.run(command, check=True, cwd=repo_root)
+
+
+def _app_icon_path(repo_root: Path) -> Path:
+    icon_path = repo_root / ICON_ASSET_PATH
+    if not icon_path.exists():
+        raise FileNotFoundError(f"Missing application icon asset: {icon_path}")
+    return icon_path
 
 
 def _build_info(repo_root: Path) -> dict[str, str]:

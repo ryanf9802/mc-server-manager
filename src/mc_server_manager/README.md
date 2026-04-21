@@ -6,6 +6,7 @@ Defines the full Python app, including encrypted app-state startup, domain model
 ## Contents
 - `config/`: typed connection settings aliases.
 - `domain/`: dataclasses and enums.
+- `assets/`: packaged runtime assets such as the canonical Windows app icon.
 - `services/`: business workflows.
 - `infrastructure/`: provider API clients, encrypted app-state, remote paths, and SFTP-backed persistence.
 - `validation/`: file validators.

@@ -11,6 +11,7 @@ import zipfile
 from pathlib import Path
 from tkinter import messagebox
 
+from mc_server_manager.app_icon import apply_window_icon
 from mc_server_manager.infrastructure.build_info import load_build_info
 from mc_server_manager.infrastructure.installations import (
     InstallLayoutResolver,
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 def main() -> int:
     log_path = configure_logging("installer.log")
     root = tk.Tk()
+    apply_window_icon(root)
     root.withdraw()
     try:
         logger.info("Installer/updater starting with logs at %s", log_path)

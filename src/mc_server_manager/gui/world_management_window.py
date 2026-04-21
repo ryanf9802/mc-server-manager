@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from tkinter import messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
 
+from mc_server_manager.app_icon import apply_window_icon
 from mc_server_manager.domain.models import (
     StoredServerConfig,
     WorldDetail,
@@ -51,6 +52,7 @@ class WorldManagementWindow:
         self._suspend_dirty_tracking = False
 
         self.window = tk.Toplevel(parent)
+        apply_window_icon(self.window)
         self.window.title(f"World Management: {server.display_name}")
         self.window.geometry("1320x860")
         self.window.minsize(1100, 720)

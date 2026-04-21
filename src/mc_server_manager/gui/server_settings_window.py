@@ -7,6 +7,7 @@ from tkinter import messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
 from typing import cast
 
+from mc_server_manager.app_icon import apply_window_icon
 from mc_server_manager.domain.models import (
     HostingProvider,
     ProviderConnection,
@@ -35,6 +36,7 @@ class ServerSettingsWindow:
         self._result: StoredServerConfig | None = None
 
         self.window = tk.Toplevel(parent)
+        apply_window_icon(self.window)
         self.window.title("Complete Server Settings" if mode == "create" else "Server Settings")
         self.window.geometry("880x760")
         self.window.minsize(760, 680)

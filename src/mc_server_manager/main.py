@@ -5,6 +5,7 @@ import sys
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 
+from mc_server_manager.app_icon import apply_window_icon
 from mc_server_manager.infrastructure.build_info import load_build_info
 from mc_server_manager.gui.main_window import MainWindow
 from mc_server_manager.infrastructure.app_state_store import AppStateStore
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 def main() -> int:
     log_path = configure_logging("app.log")
     root = tk.Tk()
+    apply_window_icon(root)
     root.withdraw()
     try:
         logger.info("Minecraft Server Manager starting with logs at %s", log_path)
@@ -113,6 +115,7 @@ def _show_startup_error(message: str, root: tk.Tk | None = None) -> None:
     try:
         if root is None:
             root = tk.Tk()
+            apply_window_icon(root)
             root.withdraw()
             messagebox.showerror("Minecraft Server Manager", message, parent=root)
             root.destroy()

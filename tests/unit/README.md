@@ -17,6 +17,9 @@ Covers deterministic logic for encrypted state, provider adapters, naming, valid
 - `test_releases.py`
 - `test_runtime_logging.py`
 - `test_sftp_gateway.py`
+- `test_app_icon.py`
+- `test_build_windows_release.py`
+- `test_entrypoints.py`
 
 ## Dependency Rules
 - Use simple fakes instead of real SFTP sessions.

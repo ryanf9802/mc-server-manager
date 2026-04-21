@@ -5,6 +5,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from tkinter import messagebox, ttk
 from typing import cast
 
+from mc_server_manager.app_icon import apply_window_icon
 from mc_server_manager.domain.models import (
     HostingProvider,
     ProviderConnection,
@@ -23,6 +24,7 @@ class AddServerWindow:
         self._servers: list[ProviderServerSummary] = []
 
         self.window = tk.Toplevel(parent)
+        apply_window_icon(self.window)
         self.window.title("Add Server")
         self.window.geometry("760x520")
         self.window.minsize(680, 480)

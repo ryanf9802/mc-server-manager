@@ -5,6 +5,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from tkinter import messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
 
+from mc_server_manager.app_icon import apply_window_icon
 from mc_server_manager.domain.models import RconCommandResult
 from mc_server_manager.services.rcon import RconService
 
@@ -22,6 +23,7 @@ class ConsoleWindow:
         self._closed = False
 
         self.window = tk.Toplevel(parent)
+        apply_window_icon(self.window)
         title_suffix = "" if not server_display_name else f": {server_display_name}"
         self.window.title(f"RCON Console{title_suffix}")
         self.window.geometry("920x560")

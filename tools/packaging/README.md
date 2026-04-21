@@ -12,7 +12,8 @@ Contains Windows packaging assets for producing release artifacts used by the in
 
 - Keep packaging behavior isolated from the runtime app so source-run development stays simple.
 - Prefer one stable build entrypoint over ad hoc shell commands.
+- Use `src/mc_server_manager/assets/app.ico` as the canonical icon asset for both executables and bundle it into the frozen runtime.
 
 ## Change Notes
 
-- Update this README when the build output path, build command, or packaging layout changes.
+- Update this README when the build output path, build command, packaging layout, or executable icon wiring changes.
