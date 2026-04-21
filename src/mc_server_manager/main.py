@@ -5,7 +5,7 @@ import sys
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 
-from mc_server_manager.app_icon import apply_window_icon
+from mc_server_manager.app_icon import apply_window_icon, configure_windows_app_identity
 from mc_server_manager.infrastructure.build_info import load_build_info
 from mc_server_manager.gui.main_window import MainWindow
 from mc_server_manager.infrastructure.app_state_store import AppStateStore
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def main() -> int:
     log_path = configure_logging("app.log")
+    configure_windows_app_identity("app")
     root = tk.Tk()
     apply_window_icon(root)
     root.withdraw()

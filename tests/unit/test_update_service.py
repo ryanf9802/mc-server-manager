@@ -118,10 +118,11 @@ def test_update_service_launches_temp_updater_copy(
     )
     captured: dict[str, object] = {}
 
-    def fake_popen(args, close_fds, creationflags=0):  # noqa: ANN001
+    def fake_popen(args, close_fds, creationflags=0, cwd=None):  # noqa: ANN001
         captured["args"] = args
         captured["close_fds"] = close_fds
         captured["creationflags"] = creationflags
+        captured["cwd"] = cwd
 
         class _Process:
             pass
@@ -146,6 +147,7 @@ def test_update_service_launches_temp_updater_copy(
         "--silent",
     ]
     assert Path(command[0]).exists()
+    assert captured["cwd"] == str(Path(command[0]).parent)
 
 
 def _release(tag_name: str) -> GitHubRelease:

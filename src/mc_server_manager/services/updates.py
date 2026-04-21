@@ -116,11 +116,12 @@ class UpdateService:
         if os.name == "nt":
             subprocess.Popen(
                 command,
+                cwd=str(temp_dir),
                 close_fds=True,
                 creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
             )
             return
-        subprocess.Popen(command, close_fds=True)
+        subprocess.Popen(command, cwd=str(temp_dir), close_fds=True)
 
     def _release_client(self) -> GitHubReleaseClient:
         if not self._build_info.repo_owner or not self._build_info.repo_name:

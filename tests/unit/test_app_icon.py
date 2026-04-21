@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from mc_server_manager import app_icon
 
@@ -64,3 +65,28 @@ def test_apply_window_icon_logs_when_asset_is_missing(caplog, monkeypatch) -> No
 
     assert app_icon.apply_window_icon(FakeWindow()) is None
     assert "Application icon asset is missing." in caplog.text
+
+
+def test_configure_windows_app_identity_sets_process_id(monkeypatch) -> None:
+    class FakeShell32:
+        def __init__(self) -> None:
+            self.argtypes = None
+            self.restype = None
+            self.calls: list[str] = []
+
+        def SetCurrentProcessExplicitAppUserModelID(self, app_id: str) -> int:
+            self.calls.append(app_id)
+            return 0
+
+    shell32 = FakeShell32()
+    monkeypatch.setattr(app_icon.sys, "platform", "win32")
+    monkeypatch.setattr(app_icon.ctypes, "windll", SimpleNamespace(shell32=shell32), raising=False)
+
+    assert app_icon.configure_windows_app_identity("app") == "ryanf9802.mc-server-manager"
+    assert shell32.calls == ["ryanf9802.mc-server-manager"]
+
+
+def test_configure_windows_app_identity_skips_non_windows(monkeypatch) -> None:
+    monkeypatch.setattr(app_icon.sys, "platform", "linux")
+
+    assert app_icon.configure_windows_app_identity("app") is None

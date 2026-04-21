@@ -11,7 +11,7 @@ import zipfile
 from pathlib import Path
 from tkinter import messagebox
 
-from mc_server_manager.app_icon import apply_window_icon
+from mc_server_manager.app_icon import apply_window_icon, configure_windows_app_identity
 from mc_server_manager.infrastructure.build_info import load_build_info
 from mc_server_manager.infrastructure.installations import (
     InstallLayoutResolver,
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 def main() -> int:
     log_path = configure_logging("installer.log")
+    configure_windows_app_identity("installer")
     root = tk.Tk()
     apply_window_icon(root)
     root.withdraw()
@@ -126,11 +127,12 @@ def _launch(app_path: Path) -> None:
     if sys.platform == "win32":
         subprocess.Popen(
             [str(app_path)],
+            cwd=str(app_path.parent),
             close_fds=True,
             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
         )
         return
-    subprocess.Popen([str(app_path)], close_fds=True)
+    subprocess.Popen([str(app_path)], cwd=str(app_path.parent), close_fds=True)
 
 
 def _show_error(message: str, root: tk.Tk) -> None:
