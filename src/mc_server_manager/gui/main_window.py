@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import tkinter as tk
+import webbrowser
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from mc_server_manager.domain.models import (
+    HostingProvider,
     ProviderPowerSignal,
     ProviderServerResources,
     ProviderServerSummary,
@@ -229,6 +231,12 @@ class MainWindow:
             command=self.open_rcon_console,
         )
         self.console_button.grid(row=2, column=0, sticky="ew", pady=(12, 0))
+        self.provider_panel_button = ttk.Button(
+            panel_frame,
+            text="Open in GameHostBros",
+            command=self.open_provider_panel,
+        )
+        self.provider_panel_button.grid(row=3, column=0, sticky="ew", pady=(12, 0))
 
         status_bar = ttk.Frame(self.root, padding=(16, 0, 16, 12))
         status_bar.grid(row=1, column=0, columnspan=2, sticky="ew")
@@ -378,8 +386,12 @@ class MainWindow:
 
         worlds_enabled = selected_server is not None and selected_server.sftp is not None
         rcon_enabled = selected_server is not None and selected_server.rcon is not None
+        provider_panel_enabled = (
+            selected_server is not None and _provider_panel_url(selected_server) is not None
+        )
         self.worlds_button.configure(state=state if worlds_enabled else "disabled")
         self.console_button.configure(state=state if rcon_enabled else "disabled")
+        self.provider_panel_button.configure(state=state if provider_panel_enabled else "disabled")
 
     def _on_server_selected(self, _event: tk.Event) -> None:
         server = self._selected_server()
@@ -619,6 +631,25 @@ class MainWindow:
         self._console_windows[server.local_id] = console
         console.present()
 
+    def open_provider_panel(self) -> None:
+        server = self._app_state_service.get_selected_server()
+        if server is None:
+            self._set_status("Select a server before opening the provider panel.")
+            return
+
+        url = _provider_panel_url(server)
+        if url is None:
+            self._set_status(
+                f"{server.provider.provider.label} does not expose a provider panel link here."
+            )
+            return
+
+        opened = webbrowser.open(url)
+        if opened:
+            self._set_status(f"Opened {server.display_name} in {server.provider.provider.label}.")
+            return
+        self._set_status(f"Failed to open browser for {server.display_name}.")
+
     def _run_background(self, task, on_success, *, start_message: str) -> None:
         if self._busy:
             return
@@ -687,3 +718,9 @@ def _power_signal_enabled(signal: ProviderPowerSignal, power_state: str | None) 
     if normalized in {"starting", "stopping", "restarting"}:
         return False
     return True
+
+
+def _provider_panel_url(server: StoredServerConfig) -> str | None:
+    if server.provider.provider is HostingProvider.GAMEHOSTBROS:
+        return f"{server.provider.resolved_panel_url}/server/{server.provider.server_id}"
+    return None
