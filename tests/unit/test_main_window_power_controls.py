@@ -1,10 +1,20 @@
+from datetime import datetime, timezone
+
 from mc_server_manager.domain.models import (
+    BuildInfo,
+    GitHubRelease,
     HostingProvider,
     ProviderConnection,
     ProviderPowerSignal,
+    ReleaseAsset,
     StoredServerConfig,
+    UpdateAvailability,
 )
-from mc_server_manager.gui.main_window import _power_signal_enabled, _provider_panel_url
+from mc_server_manager.gui.main_window import (
+    _power_signal_enabled,
+    _provider_panel_url,
+    _update_banner_state,
+)
 
 
 def test_power_controls_for_running_server() -> None:
@@ -46,3 +56,45 @@ def test_provider_panel_url_uses_short_server_id_for_gamehostbros() -> None:
     )
 
     assert _provider_panel_url(server) == "https://panel.gamehostbros.com/server/18f3416c"
+
+
+def test_update_banner_state_shows_update_when_available() -> None:
+    release = GitHubRelease(
+        tag_name="main-12-abcdef0",
+        published_at_utc=datetime(2026, 4, 21, 12, 0, tzinfo=timezone.utc),
+        html_url="https://github.com/ryanf9802/mc-server-manager/releases/tag/main-12-abcdef0",
+        assets=(
+            ReleaseAsset(
+                name="mc-server-manager-windows-x64.zip",
+                browser_download_url="https://example.com/bundle.zip",
+                size_bytes=123,
+                content_type="application/zip",
+            ),
+        ),
+    )
+    availability = UpdateAvailability(
+        current_build=BuildInfo(
+            release_tag="main-11-aaaaaaa",
+            commit_sha="abc",
+            repo_owner="ryanf9802",
+            repo_name="mc-server-manager",
+        ),
+        latest_release=release,
+        is_managed_install=True,
+        is_update_available=True,
+        message="Update available: main-12-abcdef0",
+    )
+
+    assert _update_banner_state("main-11-aaaaaaa", availability) == (
+        "Update available",
+        True,
+        release,
+    )
+
+
+def test_update_banner_state_hides_button_when_up_to_date() -> None:
+    assert _update_banner_state("main-11-aaaaaaa", None) == (
+        "Build: main-11-aaaaaaa",
+        False,
+        None,
+    )
