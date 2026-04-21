@@ -87,6 +87,14 @@ def _run_pyinstaller(
     name: str,
     entrypoint: Path,
 ) -> None:
+    collect_all_modules = [
+        "mctools",
+        "paramiko",
+        "cryptography",
+        "bcrypt",
+        "nacl",
+        "cffi",
+    ]
     command = [
         sys.executable,
         "-m",
@@ -105,12 +113,12 @@ def _run_pyinstaller(
         str(work_path),
         "--paths",
         str(repo_root / "src"),
-        "--collect-submodules",
-        "mctools",
         "--add-data",
         f"{build_info_path};.",
-        str(entrypoint),
     ]
+    for module_name in collect_all_modules:
+        command.extend(["--collect-all", module_name])
+    command.append(str(entrypoint))
     subprocess.run(command, check=True, cwd=repo_root)
 
 
