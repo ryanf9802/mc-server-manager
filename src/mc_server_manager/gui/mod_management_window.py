@@ -214,11 +214,11 @@ class ModManagementWindow:
         content = ttk.Frame(self.window, padding=(0, 16, 16, 0))
         content.grid(row=1, column=1, sticky="nsew")
         content.columnconfigure(0, weight=1)
-        content.columnconfigure(1, weight=1)
-        content.rowconfigure(0, weight=1)
+        content.rowconfigure(0, weight=3)
+        content.rowconfigure(1, weight=2)
 
         jars_frame = ttk.LabelFrame(content, text="Jars In Selected List", padding=12)
-        jars_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        jars_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 8))
         jars_frame.columnconfigure(0, weight=1)
         jars_frame.rowconfigure(0, weight=1)
 
@@ -238,7 +238,7 @@ class ModManagementWindow:
         self.jar_tree.configure(yscrollcommand=jar_scroll.set)
 
         active_frame = ttk.LabelFrame(content, text="Staged Active Mod Lists", padding=12)
-        active_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        active_frame.grid(row=1, column=0, sticky="nsew", pady=(8, 0))
         active_frame.columnconfigure(0, weight=1)
         active_frame.rowconfigure(0, weight=1)
 
