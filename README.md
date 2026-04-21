@@ -23,6 +23,10 @@ Cross-platform Python desktop app for managing remote Minecraft `server.properti
 - Format: `uv run ruff format .`
 - Type-check: `uv run ty check`
 - Test: `uv run pytest`
+- Start in the background: `make up`
+- Stop the background app: `make down`
+- Check runtime status: `make status`
+- Tail recent logs: `make logs`
 
 ## Dependency Rules
 

@@ -17,6 +17,13 @@ Documents runtime setup for running the app locally with `uv`.
 - Install dependencies with `uv sync`.
 - Start the app with `uv run mc-server-manager`.
 
+## Make Targets
+
+- `make up` starts the GUI app in the background with `uv run python -m mc_server_manager.main`.
+- `make down` stops the background process recorded in `.run/mc-server-manager.pid`.
+- `make status` reports whether the managed background process is currently running.
+- `make logs` tails `.run/mc-server-manager.log` for recent startup or runtime output.
+
 ## Development Checks
 
 - Format the repo with `uv run ruff format .`.
