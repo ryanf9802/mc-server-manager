@@ -76,10 +76,26 @@ class SftpGateway:
             data = remote_file.read()
         return data.decode("utf-8")
 
+    def read_bytes(
+        self, sftp: paramiko.SFTPClient, path: str, *, default: bytes | None = None
+    ) -> bytes:
+        if not self.exists(sftp, path):
+            if default is None:
+                raise FileNotFoundError(path)
+            return default
+
+        with sftp.file(path, "rb") as remote_file:
+            return remote_file.read()
+
     def write_text(self, sftp: paramiko.SFTPClient, path: str, content: str) -> None:
         self.ensure_dir(sftp, str(PurePosixPath(path).parent))
         with sftp.file(path, "w") as remote_file:
             remote_file.write(content.encode("utf-8"))
+
+    def write_bytes(self, sftp: paramiko.SFTPClient, path: str, content: bytes) -> None:
+        self.ensure_dir(sftp, str(PurePosixPath(path).parent))
+        with sftp.file(path, "wb") as remote_file:
+            remote_file.write(content)
 
     def ensure_dir(self, sftp: paramiko.SFTPClient, path: str) -> None:
         if path in {"", "."}:
@@ -103,6 +119,10 @@ class SftpGateway:
             else:
                 sftp.remove(entry_path.as_posix())
         sftp.rmdir(path)
+
+    def remove_file(self, sftp: paramiko.SFTPClient, path: str) -> None:
+        if self.exists(sftp, path):
+            sftp.remove(path)
 
     def _format_connection_error(self, exc: Exception) -> str:
         return (

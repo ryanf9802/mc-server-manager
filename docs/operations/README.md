@@ -24,6 +24,8 @@ Documents runtime setup for running the app locally with `uv`.
 - In-app updates replace the managed install in place and keep the encrypted app-state file intact.
 - Runtime logs are written under `%LOCALAPPDATA%\mc-server-manager\logs`.
 - The home screen includes `Open Logs Folder` for diagnostics after provider, SFTP, RCON, or update failures.
+- Remote world configs live under `${SFTP_SERVER_ROOT}/.mc-manager/worlds/`.
+- Remote mod lists live under `${SFTP_SERVER_ROOT}/.mc-manager/mod-lists/`, and the applied active-order record lives at `${SFTP_SERVER_ROOT}/.mc-manager/active-mod-lists.json`.
 
 ## Windows Packaging
 
@@ -46,6 +48,7 @@ Documents runtime setup for running the app locally with `uv`.
 - The app uses the fixed GameHostBros panel base URL `https://panel.gamehostbros.com`.
 - The home screen uses the provider API for discovery, manual refresh, and power actions.
 - World management remains SFTP-based and does not use the provider file-manager endpoints.
+- Mod management also remains SFTP-based and does not use the provider file-manager endpoints.
 
 ## Make Targets
 

@@ -1,6 +1,6 @@
 # mc-server-manager
 
-Cross-platform Python desktop app for managing multiple hosted Minecraft servers from one encrypted local library. The home screen handles provider-backed power controls and opens server-specific panels for SFTP world management and RCON commands.
+Cross-platform Python desktop app for managing multiple hosted Minecraft servers from one encrypted local library. The home screen handles provider-backed power controls and opens server-specific panels for SFTP world management, SFTP mod management, and RCON commands.
 
 ## Root Contents
 
@@ -25,6 +25,7 @@ Cross-platform Python desktop app for managing multiple hosted Minecraft servers
 - The app no longer reads runtime configuration from `.env`.
 - Each saved server entry persists inside an encrypted local app-state file protected by the application password.
 - Export/import writes a single encrypted server configuration file per server.
+- World configs and managed mod lists are stored remotely under the server's SFTP `.mc-manager` directory instead of in local app state.
 - RCON is optional per saved server. When absent, the RCON panel stays disabled for that server.
 - Runtime logs are written under the platform log/app-data directory, and the home screen can open the logs folder directly.
 
@@ -45,6 +46,7 @@ Cross-platform Python desktop app for managing multiple hosted Minecraft servers
 2. Build the Windows release assets with `uv run python tools/packaging/build_windows_release.py`.
 3. The release output lands in `dist/windows-release/` and includes:
    `mc-server-manager-installer.exe`, `mc-server-manager-windows-x64.zip`, and `SHA256SUMS.txt`.
+   The app and installer executables both use `src/mc_server_manager/assets/app.ico` for branding.
 4. The installer manages a per-user install under `%LOCALAPPDATA%\mc-server-manager\install\current`.
 5. Encrypted app state stays outside the install directory in the platform app-data location, so in-place updates do not remove saved servers.
 6. The build is Windows-only; PyInstaller does not produce a Windows `.exe` from Linux/WSL.

@@ -10,6 +10,7 @@ Implements the tkinter desktop interface and keeps presentation state separate f
 - `add_server_window.py`: provider discovery flow for onboarding a new server.
 - `server_settings_window.py`: per-server provider, provider-specific SFTP, and RCON configuration editor.
 - `world_management_window.py`: SFTP-backed world CRUD editor for a selected server.
+- `mod_management_window.py`: SFTP-backed mod-list editor and staged activation UI for a selected server.
 - `console_window.py`: optional popup for RCON command execution.
 
 ## Dependency Rules

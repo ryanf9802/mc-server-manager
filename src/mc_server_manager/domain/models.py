@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from enum import Enum
 from enum import StrEnum
 
 
@@ -19,6 +18,34 @@ class WorldStatus(StrEnum):
             WorldStatus.ACTIVE: "Active",
             WorldStatus.PENDING_APPLY: "Pending Apply",
             WorldStatus.UNMANAGED_LIVE: "Unmanaged Live",
+        }[self]
+
+
+class ModListStatus(StrEnum):
+    INACTIVE = "inactive"
+    ACTIVE = "active"
+    PENDING_APPLY = "pending_apply"
+    UNMANAGED_LIVE = "unmanaged_live"
+
+    @property
+    def label(self) -> str:
+        return {
+            ModListStatus.INACTIVE: "Inactive",
+            ModListStatus.ACTIVE: "Active",
+            ModListStatus.PENDING_APPLY: "Pending Apply",
+            ModListStatus.UNMANAGED_LIVE: "Unmanaged Live",
+        }[self]
+
+
+class ModJarStatus(StrEnum):
+    INCLUDED = "included"
+    OVERRIDDEN = "overridden"
+
+    @property
+    def label(self) -> str:
+        return {
+            ModJarStatus.INCLUDED: "Included",
+            ModJarStatus.OVERRIDDEN: "Overridden",
         }[self]
 
 
@@ -55,6 +82,84 @@ class WorldDetail:
 class WorldSummary:
     manifest: WorldManifest
     status: WorldStatus
+
+
+@dataclass(frozen=True, slots=True)
+class ModJarMetadata:
+    filename: str
+    size_bytes: int
+    sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModListManifest:
+    slug: str
+    display_name: str
+    created_at_utc: datetime
+    updated_at_utc: datetime
+    jars: tuple[ModJarMetadata, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class AppliedModFileRecord:
+    filename: str
+    source_list_slug: str
+    sha256: str
+    size_bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class ActiveModListsRecord:
+    slugs_in_order: tuple[str, ...]
+    applied_at_utc: datetime
+    applied_files: tuple[AppliedModFileRecord, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ModJarView:
+    metadata: ModJarMetadata
+    status: ModJarStatus
+    overridden_by_slug: str | None = None
+    overridden_by_display_name: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ModListSummary:
+    manifest: ModListManifest
+    status: ModListStatus
+    active_position: int | None
+    included_count: int
+    overridden_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class ModListDetail:
+    manifest: ModListManifest
+    status: ModListStatus
+    active_position: int | None
+    jars: tuple[ModJarView, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class LocalModFile:
+    filename: str
+    local_path: str
+    size_bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class ManagedModFile:
+    filename: str
+    sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModListSaveRequest:
+    slug: str
+    display_name: str
+    created_at_utc: datetime | None = None
+    managed_files: tuple[ManagedModFile, ...] = ()
+    local_files: tuple[LocalModFile, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

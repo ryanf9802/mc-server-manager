@@ -3,8 +3,16 @@ from __future__ import annotations
 from mc_server_manager.domain.models import StoredServerConfig
 from mc_server_manager.infrastructure.provider_clients import ProviderClient, ProviderClientFactory
 from mc_server_manager.infrastructure.remote_paths import RemotePaths
-from mc_server_manager.infrastructure.repositories import SftpLiveConfigStore, SftpWorldRepository
+from mc_server_manager.infrastructure.repositories import (
+    SftpLiveConfigStore,
+    SftpLiveModsStore,
+    SftpModRepository,
+    SftpWorldRepository,
+)
 from mc_server_manager.infrastructure.sftp_gateway import SftpGateway
+from mc_server_manager.services.mod_activation import ModActivationService
+from mc_server_manager.services.mod_catalog import ModCatalogService
+from mc_server_manager.services.mod_editor import ModEditorService
 from mc_server_manager.services.activation import ActivationService
 from mc_server_manager.services.rcon import RconService
 from mc_server_manager.services.world_catalog import WorldCatalogService
@@ -32,6 +40,23 @@ def create_world_services(
             WhitelistValidator(),
         ),
         ActivationService(world_repository, live_config_store),
+    )
+
+
+def create_mod_services(
+    server: StoredServerConfig,
+) -> tuple[ModCatalogService, ModEditorService, ModActivationService]:
+    if server.sftp is None:
+        raise ValueError("SFTP is not configured for this server.")
+
+    gateway = SftpGateway(server.sftp)
+    paths = RemotePaths(server.sftp)
+    mod_repository = SftpModRepository(gateway, paths)
+    live_mods_store = SftpLiveModsStore(gateway, paths)
+    return (
+        ModCatalogService(mod_repository, live_mods_store),
+        ModEditorService(mod_repository, live_mods_store),
+        ModActivationService(mod_repository, live_mods_store),
     )
 
 

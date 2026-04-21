@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Describes the intended behavior of the multi-server home screen, provider controls, world CRUD, validation, and activation.
+Describes the intended behavior of the multi-server home screen, provider controls, world CRUD, mod-list management, validation, and activation.
 
 ## Contents
 
@@ -14,6 +14,10 @@ Describes the intended behavior of the multi-server home screen, provider contro
 - A world is a remote-managed pair of `server.properties` and `whitelist.json`.
 - Saving updates only the managed copy.
 - Activating replaces the live files in the remote server root.
+- A mod list is a remote-managed collection of `.jar` files stored under `.mc-manager/mod-lists`.
+- The UI can snapshot the live `mods` folder into a managed mod list or upload local `.jar` files into a managed mod list.
+- Multiple mod lists can be staged as active at the same time, and later active lists override earlier ones when jar filenames conflict.
+- Applying the staged active mod lists rewrites only the top-level live `.jar` files in the remote `mods` folder.
 - Optional RCON console access allows request/response command execution without live console streaming.
 - Server configurations can be exported or imported as encrypted single-server files.
 
@@ -23,4 +27,4 @@ Describes the intended behavior of the multi-server home screen, provider contro
 
 ## Change Notes
 
-- Update this file when world lifecycle rules or statuses change.
+- Update this file when world or mod-list lifecycle rules or statuses change.

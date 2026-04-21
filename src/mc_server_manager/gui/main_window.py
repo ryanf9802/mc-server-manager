@@ -21,6 +21,7 @@ from mc_server_manager.domain.models import (
 )
 from mc_server_manager.gui.add_server_window import AddServerWindow
 from mc_server_manager.gui.console_window import ConsoleWindow
+from mc_server_manager.gui.mod_management_window import ModManagementWindow
 from mc_server_manager.gui.server_settings_window import ServerSettingsWindow
 from mc_server_manager.gui.world_management_window import WorldManagementWindow
 from mc_server_manager.infrastructure.runtime_logging import (
@@ -32,6 +33,7 @@ from mc_server_manager.services.app_state import AppStateService
 from mc_server_manager.services.server_runtime import (
     create_provider_client,
     create_rcon_service,
+    create_mod_services,
     create_world_services,
 )
 from mc_server_manager.services.updates import UpdateService
@@ -56,6 +58,7 @@ class MainWindow:
         self._server_lookup: dict[str, StoredServerConfig] = {}
         self._server_ids: list[str] = []
         self._world_windows: dict[str, WorldManagementWindow] = {}
+        self._mod_windows: dict[str, ModManagementWindow] = {}
         self._console_windows: dict[str, ConsoleWindow] = {}
 
         self.status_message_var = tk.StringVar(
@@ -249,18 +252,24 @@ class MainWindow:
             command=self.open_world_management,
         )
         self.worlds_button.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+        self.mods_button = ttk.Button(
+            panel_frame,
+            text="Open Mod Management",
+            command=self.open_mod_management,
+        )
+        self.mods_button.grid(row=2, column=0, sticky="ew", pady=(12, 0))
         self.console_button = ttk.Button(
             panel_frame,
             text="Open RCON Console",
             command=self.open_rcon_console,
         )
-        self.console_button.grid(row=2, column=0, sticky="ew", pady=(12, 0))
+        self.console_button.grid(row=3, column=0, sticky="ew", pady=(12, 0))
         self.provider_panel_button = ttk.Button(
             panel_frame,
             text="Open in GameHostBros",
             command=self.open_provider_panel,
         )
-        self.provider_panel_button.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        self.provider_panel_button.grid(row=4, column=0, sticky="ew", pady=(12, 0))
 
         status_bar = ttk.Frame(self.root, padding=(16, 0, 16, 12))
         status_bar.grid(row=1, column=0, columnspan=2, sticky="ew")
@@ -428,11 +437,13 @@ class MainWindow:
         )
 
         worlds_enabled = selected_server is not None and selected_server.sftp is not None
+        mods_enabled = selected_server is not None and selected_server.sftp is not None
         rcon_enabled = selected_server is not None and selected_server.rcon is not None
         provider_panel_enabled = (
             selected_server is not None and _provider_panel_url(selected_server) is not None
         )
         self.worlds_button.configure(state=state if worlds_enabled else "disabled")
+        self.mods_button.configure(state=state if mods_enabled else "disabled")
         self.console_button.configure(state=state if rcon_enabled else "disabled")
         self.provider_panel_button.configure(state=state if provider_panel_enabled else "disabled")
         self.update_button.configure(state=state)
@@ -654,6 +665,31 @@ class MainWindow:
         logger.info("Opening World Management for server=%s", server.display_name)
         window.present()
 
+    def open_mod_management(self) -> None:
+        server = self._app_state_service.get_selected_server()
+        if server is None:
+            self._set_status("Select a server before opening mod management.")
+            return
+        if server.sftp is None:
+            messagebox.showerror(
+                "Mod Management",
+                "SFTP is not configured for this server.",
+                parent=self.root,
+            )
+            self._set_status("Mod management is unavailable until SFTP is configured.")
+            return
+
+        existing = self._mod_windows.get(server.local_id)
+        if existing is not None and existing.window.winfo_exists():
+            existing.present()
+            return
+
+        services = create_mod_services(server)
+        window = ModManagementWindow(self.root, server, *services)
+        self._mod_windows[server.local_id] = window
+        logger.info("Opening Mod Management for server=%s", server.display_name)
+        window.present()
+
     def open_rcon_console(self) -> None:
         server = self._app_state_service.get_selected_server()
         if server is None:
@@ -701,7 +737,7 @@ class MainWindow:
         if self._has_open_child_windows():
             messagebox.showinfo(
                 "Minecraft Server Manager",
-                "Close World Management and RCON windows before updating.",
+                "Close World Management, Mod Management, and RCON windows before updating.",
                 parent=self.root,
             )
             self._set_status("Close open child windows before updating.")
@@ -804,12 +840,17 @@ class MainWindow:
             for local_id, window in self._world_windows.items()
             if window.window.winfo_exists()
         }
+        self._mod_windows = {
+            local_id: window
+            for local_id, window in self._mod_windows.items()
+            if window.window.winfo_exists()
+        }
         self._console_windows = {
             local_id: window
             for local_id, window in self._console_windows.items()
             if window.window.winfo_exists()
         }
-        return bool(self._world_windows or self._console_windows)
+        return bool(self._world_windows or self._mod_windows or self._console_windows)
 
     def open_logs_folder(self) -> None:
         try:

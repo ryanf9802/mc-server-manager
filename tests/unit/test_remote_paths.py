@@ -18,3 +18,9 @@ def test_remote_paths_preserve_rooted_server_path() -> None:
         paths.world_manifest_path("weekend")
         == "/minecraft/server/.mc-manager/worlds/weekend/world.json"
     )
+    assert (
+        paths.mod_list_manifest_path("fabric")
+        == "/minecraft/server/.mc-manager/mod-lists/fabric/mod-list.json"
+    )
+    assert paths.active_mod_lists_path == "/minecraft/server/.mc-manager/active-mod-lists.json"
+    assert paths.live_mod_path("sodium.jar") == "/minecraft/server/mods/sodium.jar"

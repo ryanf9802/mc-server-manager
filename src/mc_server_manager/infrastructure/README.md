@@ -12,7 +12,7 @@ Contains provider API clients, encrypted local state storage, remote path rules,
 - `runtime_logging.py`: persistent app-data log setup, log-folder helpers, and uncaught exception hooks.
 - `remote_paths.py`: remote file layout and path helpers.
 - `sftp_gateway.py`: Paramiko session management and file primitives.
-- `repositories.py`: world repository and live config store implementations.
+- `repositories.py`: SFTP-backed world repositories, mod-list repositories, and live-file stores.
 
 ## Dependency Rules
 - Keep transport details here so the rest of the app talks in domain types.
