@@ -4,7 +4,7 @@ PID_FILE := $(RUNTIME_DIR)/mc-server-manager.pid
 LOG_FILE := $(RUNTIME_DIR)/mc-server-manager.log
 UV_CACHE_DIR := $(RUNTIME_DIR)/uv-cache
 
-.PHONY: up down status logs
+.PHONY: up down status logs package-windows-single
 
 up:
 	@mkdir -p $(RUNTIME_DIR) $(UV_CACHE_DIR)
@@ -57,3 +57,6 @@ logs:
 	else \
 		echo "No log file found at $(LOG_FILE)"; \
 	fi
+
+package-windows-single:
+	@uv run python tools/packaging/build_windows_single_exe.py

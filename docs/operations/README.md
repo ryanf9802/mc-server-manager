@@ -21,6 +21,14 @@ Documents runtime setup for running the app locally with `uv`.
 - For `GameHostBros` SFTP, the settings window accepts `Connection Address`, `Username`, and `Password`. The app accepts either `sftp://host:port` or `host:port` and always saves `/` as the root.
 - Saved server configurations persist in an encrypted local state file under the platform app-data directory.
 
+## Windows Packaging
+
+- Install packaging dependencies on Windows with `uv sync --dev`.
+- Build the single-file executable with `uv run python tools/packaging/build_windows_single_exe.py`.
+- The build output is `dist/windows-single/mc-server-manager.exe`.
+- The same build can be launched through `make package-windows-single` where `make` is available.
+- PyInstaller builds are platform-specific, so create the Windows `.exe` on Windows rather than WSL/Linux.
+
 ## RCON Notes
 
 - RCON is optional and does not block the app from starting.

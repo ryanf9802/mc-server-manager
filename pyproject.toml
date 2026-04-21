@@ -21,6 +21,7 @@ mc-server-manager = "mc_server_manager.main:main"
 
 [dependency-groups]
 dev = [
+    "pyinstaller>=6.11.0",
     "pytest>=8.3.0",
     "ruff>=0.13.0",
     "ty>=0.0.1a16",
