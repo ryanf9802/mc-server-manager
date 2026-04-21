@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import os
 import tkinter as tk
 import webbrowser
 from concurrent.futures import Future, ThreadPoolExecutor
+from datetime import timezone
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from mc_server_manager.domain.models import (
+    GitHubRelease,
     HostingProvider,
     ProviderPowerSignal,
     ProviderServerResources,
@@ -24,12 +27,19 @@ from mc_server_manager.services.server_runtime import (
     create_rcon_service,
     create_world_services,
 )
+from mc_server_manager.services.updates import UpdateService
 
 
 class MainWindow:
-    def __init__(self, root: tk.Tk, app_state_service: AppStateService) -> None:
+    def __init__(
+        self,
+        root: tk.Tk,
+        app_state_service: AppStateService,
+        update_service: UpdateService,
+    ) -> None:
         self.root = root
         self._app_state_service = app_state_service
+        self._update_service = update_service
         self._executor = ThreadPoolExecutor(max_workers=3)
         self._busy = False
         self._current_power_state: str | None = None
@@ -40,6 +50,9 @@ class MainWindow:
 
         self.status_message_var = tk.StringVar(
             value="Select a server or add one from the provider API."
+        )
+        self.build_label_var = tk.StringVar(
+            value=f"Build: {self._update_service.current_build_label()}"
         )
         self.selected_server_name_var = tk.StringVar(value="No server selected")
         self.provider_summary_var = tk.StringVar(value="Provider: Not configured")
@@ -241,9 +254,20 @@ class MainWindow:
         status_bar = ttk.Frame(self.root, padding=(16, 0, 16, 12))
         status_bar.grid(row=1, column=0, columnspan=2, sticky="ew")
         status_bar.columnconfigure(0, weight=1)
+        status_bar.columnconfigure(1, weight=0)
+        status_bar.columnconfigure(2, weight=0)
         ttk.Label(status_bar, textvariable=self.status_message_var).grid(
             row=0, column=0, sticky="w"
         )
+        ttk.Label(status_bar, textvariable=self.build_label_var).grid(
+            row=0, column=1, sticky="e", padx=(12, 12)
+        )
+        self.update_button = ttk.Button(
+            status_bar,
+            text="Update",
+            command=self.update_application,
+        )
+        self.update_button.grid(row=0, column=2, sticky="e")
 
     def _bind_events(self) -> None:
         self.server_listbox.bind("<<ListboxSelect>>", self._on_server_selected)
@@ -392,6 +416,7 @@ class MainWindow:
         self.worlds_button.configure(state=state if worlds_enabled else "disabled")
         self.console_button.configure(state=state if rcon_enabled else "disabled")
         self.provider_panel_button.configure(state=state if provider_panel_enabled else "disabled")
+        self.update_button.configure(state=state)
 
     def _on_server_selected(self, _event: tk.Event) -> None:
         server = self._selected_server()
@@ -649,6 +674,75 @@ class MainWindow:
             self._set_status(f"Opened {server.display_name} in {server.provider.provider.label}.")
             return
         self._set_status(f"Failed to open browser for {server.display_name}.")
+
+    def update_application(self) -> None:
+        if self._has_open_child_windows():
+            messagebox.showinfo(
+                "Minecraft Server Manager",
+                "Close World Management and RCON windows before updating.",
+                parent=self.root,
+            )
+            self._set_status("Close open child windows before updating.")
+            return
+
+        def task():
+            return self._update_service.check_for_updates()
+
+        def on_success(availability) -> None:
+            if not availability.is_managed_install:
+                messagebox.showinfo(
+                    "Minecraft Server Manager",
+                    availability.message,
+                    parent=self.root,
+                )
+                self._set_status(availability.message)
+                return
+            if not availability.is_update_available or availability.latest_release is None:
+                messagebox.showinfo(
+                    "Minecraft Server Manager",
+                    availability.message,
+                    parent=self.root,
+                )
+                self._set_status(availability.message)
+                return
+
+            if not self._confirm_update(availability.latest_release):
+                self._set_status("Update canceled.")
+                return
+
+            self._update_service.launch_update(availability.latest_release, wait_pid=os.getpid())
+            self._set_status(
+                f"Updating to {availability.latest_release.tag_name} and restarting..."
+            )
+            self.root.after(150, self.close)
+
+        self._run_background(
+            task,
+            on_success,
+            start_message="Checking for application updates...",
+        )
+
+    def _confirm_update(self, release: GitHubRelease) -> bool:
+        published = release.published_at_utc.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        return messagebox.askyesno(
+            "Minecraft Server Manager",
+            f"Update to {release.tag_name} published {published}?\n\n"
+            "The app will restart into the updated build.",
+            parent=self.root,
+        )
+
+    def _has_open_child_windows(self) -> bool:
+        self._world_windows = {
+            local_id: window
+            for local_id, window in self._world_windows.items()
+            if window.window.winfo_exists()
+        }
+        self._console_windows = {
+            local_id: window
+            for local_id, window in self._console_windows.items()
+            if window.window.winfo_exists()
+        }
+        return bool(self._world_windows or self._console_windows)
 
     def _run_background(self, task, on_success, *, start_message: str) -> None:
         if self._busy:

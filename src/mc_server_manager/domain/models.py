@@ -197,6 +197,73 @@ class SelectedServerStatus:
 
 
 @dataclass(frozen=True, slots=True)
+class BuildInfo:
+    release_tag: str
+    commit_sha: str
+    repo_owner: str
+    repo_name: str
+    installer_asset_name: str = "mc-server-manager-installer.exe"
+    bundle_asset_name: str = "mc-server-manager-windows-x64.zip"
+
+    @property
+    def is_dev(self) -> bool:
+        return self.release_tag.strip().lower() == "dev"
+
+    @property
+    def repo_full_name(self) -> str:
+        if not self.repo_owner or not self.repo_name:
+            return ""
+        return f"{self.repo_owner}/{self.repo_name}"
+
+
+@dataclass(frozen=True, slots=True)
+class InstallLayout:
+    root_dir: str
+    current_dir: str
+    current_app_exe: str
+    installer_exe: str
+    metadata_path: str
+    staging_dir: str
+    start_menu_shortcut: str
+
+
+@dataclass(frozen=True, slots=True)
+class InstalledAppMetadata:
+    release_tag: str
+    installed_at_utc: datetime
+    current_exe_name: str
+    installer_exe_name: str
+
+
+@dataclass(frozen=True, slots=True)
+class ReleaseAsset:
+    name: str
+    browser_download_url: str
+    size_bytes: int
+    content_type: str
+
+
+@dataclass(frozen=True, slots=True)
+class GitHubRelease:
+    tag_name: str
+    published_at_utc: datetime
+    html_url: str
+    assets: tuple[ReleaseAsset, ...]
+
+    def get_asset(self, name: str) -> ReleaseAsset | None:
+        return next((asset for asset in self.assets if asset.name == name), None)
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateAvailability:
+    current_build: BuildInfo
+    latest_release: GitHubRelease | None
+    is_managed_install: bool
+    is_update_available: bool
+    message: str
+
+
+@dataclass(frozen=True, slots=True)
 class EncryptedEnvelope:
     schema_version: int
     salt_b64: str

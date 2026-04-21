@@ -4,9 +4,11 @@ import sys
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 
+from mc_server_manager.infrastructure.build_info import load_build_info
 from mc_server_manager.gui.main_window import MainWindow
 from mc_server_manager.infrastructure.app_state_store import AppStateStore
 from mc_server_manager.services.app_state import AppStateService
+from mc_server_manager.services.updates import UpdateService
 
 
 def main() -> int:
@@ -19,7 +21,11 @@ def main() -> int:
             root.destroy()
             return 0
 
-        main_window = MainWindow(root, AppStateService(store, state, password))
+        main_window = MainWindow(
+            root,
+            AppStateService(store, state, password),
+            UpdateService(load_build_info()),
+        )
         main_window.run()
         return 0
     except Exception as exc:  # noqa: BLE001

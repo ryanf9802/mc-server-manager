@@ -11,6 +11,7 @@ Defines the full Python app, including encrypted app-state startup, domain model
 - `validation/`: file validators.
 - `gui/`: tkinter UI for the home screen, discovery/settings dialogs, world management, and RCON.
 - `main.py`: package entrypoint.
+- `installer_main.py`: Windows installer and updater helper entrypoint.
 
 ## Dependency Rules
 - Cross-cutting behavior should be implemented once in the lowest sensible layer.

@@ -7,6 +7,7 @@ Contains business workflows for encrypted app-state, world naming, listing, edit
 - `app_state.py`: in-memory encrypted app-state workflow and server uniqueness rules.
 - `server_runtime.py`: builds provider, SFTP, and RCON service stacks for a selected server.
 - `sftp_connection_address.py`: GameHostBros SFTP connection-address parsing and normalization.
+- `updates.py`: managed-install update checks and updater handoff.
 - `world_name.py`: immutable slug generation.
 - `hashing.py`: content hashing.
 - `world_catalog.py`: list/load and status reconciliation.
