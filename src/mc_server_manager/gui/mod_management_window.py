@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from mc_server_manager.domain.models import (
     LocalModFile,
+    LiveModFile,
     ManagedModFile,
     ModJarMetadata,
     ModJarStatus,
@@ -31,6 +32,7 @@ class EditableModEntry:
     source_kind: str
     sha256: str | None = None
     local_path: str | None = None
+    modified_time_epoch_seconds: int | None = None
 
 
 @dataclass(slots=True)
@@ -343,11 +345,12 @@ class ModManagementWindow:
             self._set_status("Enter a mod-list name before saving the current live mods.")
             return
 
-        def task() -> ModListManifest:
+        def task() -> tuple[ModListManifest, tuple[LiveModFile, ...]]:
             return self._mod_editor_service.create_draft_from_live(display_name)
 
-        def on_success(manifest: ModListManifest) -> None:
-            self._apply_manifest_draft(manifest, ())
+        def on_success(result: tuple[ModListManifest, tuple[LiveModFile, ...]]) -> None:
+            manifest, live_files = result
+            self._apply_manifest_draft(manifest, (), live_files)
             self.new_list_name_var.set("")
             self._set_status(
                 f"Drafted '{manifest.display_name}' from the current live remote mods folder."
@@ -645,8 +648,10 @@ class ModManagementWindow:
         self,
         manifest: ModListManifest,
         local_files: tuple[LocalModFile, ...],
+        live_files: tuple[LiveModFile, ...] = (),
     ) -> None:
         entries = [_managed_entry_from_metadata(item) for item in manifest.jars]
+        entries.extend(_live_entry_from_file(item) for item in live_files)
         entries.extend(_local_entry_from_file(item) for item in local_files)
         self._apply_session(
             manifest=manifest,
@@ -783,9 +788,12 @@ class ModManagementWindow:
         selected = self.jar_tree.selection()
         self.jar_tree.delete(*self.jar_tree.get_children())
         for entry in sorted(self._jar_entries, key=lambda item: item.filename.lower()):
-            source_label = (
-                "Managed remote copy" if entry.source_kind == "managed" else "Local upload"
-            )
+            if entry.source_kind == "managed":
+                source_label = "Managed remote copy"
+            elif entry.source_kind == "live":
+                source_label = "Live remote copy"
+            else:
+                source_label = "Local upload"
             self.jar_tree.insert(
                 "",
                 "end",
@@ -822,10 +830,19 @@ class ModManagementWindow:
             return None
         display_name = self.display_name_var.get().strip()
         managed_files = []
+        live_files = []
         local_files = []
         for entry in self._jar_entries:
             if entry.source_kind == "managed" and entry.sha256 is not None:
                 managed_files.append(ManagedModFile(filename=entry.filename, sha256=entry.sha256))
+            elif entry.source_kind == "live" and entry.modified_time_epoch_seconds is not None:
+                live_files.append(
+                    LiveModFile(
+                        filename=entry.filename,
+                        size_bytes=entry.size_bytes,
+                        modified_time_epoch_seconds=entry.modified_time_epoch_seconds,
+                    )
+                )
             elif entry.source_kind == "local" and entry.local_path is not None:
                 local_files.append(
                     LocalModFile(
@@ -840,6 +857,7 @@ class ModManagementWindow:
             display_name=display_name,
             created_at_utc=self._session.manifest.created_at_utc,
             managed_files=tuple(sorted(managed_files, key=lambda item: item.filename.lower())),
+            live_files=tuple(sorted(live_files, key=lambda item: item.filename.lower())),
             local_files=tuple(sorted(local_files, key=lambda item: item.filename.lower())),
         )
 
@@ -1002,6 +1020,15 @@ def _managed_entry_from_metadata(metadata: ModJarMetadata) -> EditableModEntry:
         size_bytes=metadata.size_bytes,
         source_kind="managed",
         sha256=metadata.sha256,
+    )
+
+
+def _live_entry_from_file(live_file: LiveModFile) -> EditableModEntry:
+    return EditableModEntry(
+        filename=live_file.filename,
+        size_bytes=live_file.size_bytes,
+        source_kind="live",
+        modified_time_epoch_seconds=live_file.modified_time_epoch_seconds,
     )
 
 

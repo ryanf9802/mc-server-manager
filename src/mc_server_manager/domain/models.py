@@ -109,10 +109,18 @@ class AppliedModFileRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ModFileFingerprint:
+    filename: str
+    size_bytes: int
+    modified_time_epoch_seconds: int
+
+
+@dataclass(frozen=True, slots=True)
 class ActiveModListsRecord:
     slugs_in_order: tuple[str, ...]
     applied_at_utc: datetime
     applied_files: tuple[AppliedModFileRecord, ...] = ()
+    live_files: tuple[ModFileFingerprint, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,11 +162,19 @@ class ManagedModFile:
 
 
 @dataclass(frozen=True, slots=True)
+class LiveModFile:
+    filename: str
+    size_bytes: int
+    modified_time_epoch_seconds: int
+
+
+@dataclass(frozen=True, slots=True)
 class ModListSaveRequest:
     slug: str
     display_name: str
     created_at_utc: datetime | None = None
     managed_files: tuple[ManagedModFile, ...] = ()
+    live_files: tuple[LiveModFile, ...] = ()
     local_files: tuple[LocalModFile, ...] = ()
 
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from mc_server_manager.domain.models import (
     ActiveModListsRecord,
+    AppliedModFileRecord,
+    ModFileFingerprint,
     ModJarMetadata,
     ModListDetail,
     ModListManifest,
@@ -21,10 +23,12 @@ class ModCatalogService:
         manifests_by_slug = {manifest.slug: manifest for manifest in manifests}
         active_record = self._live_mods_store.get_active_mod_lists()
         active_slugs = _active_slugs_from_record(active_record, manifests_by_slug)
-        live_mods = self._live_mods_store.list_live_mods()
         resolved = resolve_active_mods(manifests_by_slug, active_slugs)
-        live_matches = _live_matches_record(active_record, live_mods)
-        desired_matches = _desired_matches_record(active_record, resolved.effective_files)
+        live_matches, desired_matches = self._status_matches(
+            active_record=active_record,
+            active_slugs=active_slugs,
+            desired_files=resolved.effective_files,
+        )
 
         summaries: list[ModListSummary] = []
         for manifest in manifests:
@@ -55,10 +59,13 @@ class ModCatalogService:
 
         active_record = self._live_mods_store.get_active_mod_lists()
         active_slugs = _active_slugs_from_record(active_record, manifests_by_slug)
-        live_mods = self._live_mods_store.list_live_mods()
         resolved = resolve_active_mods(manifests_by_slug, active_slugs)
-        live_matches = _live_matches_record(active_record, live_mods)
-        desired_matches = _desired_matches_record(active_record, resolved.effective_files)
+        live_matches, desired_matches = self._status_matches(
+            active_record=active_record,
+            active_slugs=active_slugs,
+            desired_files=resolved.effective_files,
+            target_slug=slug,
+        )
 
         return ModListDetail(
             manifest=manifest,
@@ -85,6 +92,25 @@ class ModCatalogService:
         return sorted(
             self._mod_repository.list_mod_lists(),
             key=lambda manifest: manifest.display_name.lower(),
+        )
+
+    def _status_matches(
+        self,
+        *,
+        active_record: ActiveModListsRecord | None,
+        active_slugs: tuple[str, ...],
+        desired_files,
+        target_slug: str | None = None,
+    ) -> tuple[bool, bool]:
+        if active_record is None or not active_slugs:
+            return True, True
+        if target_slug is not None and target_slug not in active_slugs:
+            return True, True
+
+        live_mods = self._live_mods_store.list_live_mod_fingerprints()
+        return (
+            _live_matches_record(active_record, live_mods),
+            _desired_matches_record(active_record, desired_files),
         )
 
 
@@ -127,13 +153,17 @@ def _resolve_status(
 
 def _live_matches_record(
     active_record: ActiveModListsRecord | None,
-    live_mods: tuple[ModJarMetadata, ...],
+    live_mods: tuple[ModFileFingerprint, ...],
 ) -> bool:
     if active_record is None:
         return not live_mods
-    return _mod_tuples_from_record(active_record.applied_files) == _mod_tuples_from_metadata(
-        live_mods
-    )
+    if active_record.live_files:
+        return _mod_tuples_from_fingerprints(
+            active_record.live_files
+        ) == _mod_tuples_from_fingerprints(live_mods)
+    return _mod_tuples_from_record_sizes(
+        active_record.applied_files
+    ) == _mod_tuples_from_fingerprint_sizes(live_mods)
 
 
 def _desired_matches_record(
@@ -147,9 +177,40 @@ def _desired_matches_record(
     )
 
 
-def _mod_tuples_from_metadata(mods: tuple[ModJarMetadata, ...]) -> tuple[tuple[str, str, int], ...]:
-    return tuple(sorted((item.filename, item.sha256, item.size_bytes) for item in mods))
-
-
 def _mod_tuples_from_record(records) -> tuple[tuple[str, str, int], ...]:
     return tuple(sorted((item.filename, item.sha256, item.size_bytes) for item in records))
+
+
+def _mod_tuples_from_fingerprints(
+    records: tuple[ModFileFingerprint, ...],
+) -> tuple[tuple[str, int, int], ...]:
+    return tuple(
+        sorted(
+            (
+                item.filename,
+                item.size_bytes,
+                item.modified_time_epoch_seconds,
+            )
+            for item in records
+        )
+    )
+
+
+def _mod_tuples_from_record_sizes(
+    records: tuple[AppliedModFileRecord, ...],
+) -> tuple[tuple[str, int], ...]:
+    return tuple(sorted((item.filename, item.size_bytes) for item in records))
+
+
+def _mod_tuples_from_fingerprint_sizes(
+    records: tuple[ModFileFingerprint, ...],
+) -> tuple[tuple[str, int], ...]:
+    return tuple(
+        sorted(
+            (
+                item.filename,
+                item.size_bytes,
+            )
+            for item in records
+        )
+    )

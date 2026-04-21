@@ -20,19 +20,17 @@ class ModActivationService:
             raise ValueError(f"Mod list '{missing[0]}' was not found.")
 
         resolved = resolve_active_mods(manifests_by_slug, unique_slugs)
-        jar_bytes_by_filename: dict[str, bytes] = {}
-        for item in resolved.effective_files:
-            jar_bytes_by_filename[item.filename] = self._mod_repository.read_mod_bytes(
-                item.source_list_slug,
-                item.filename,
-            )
+        jar_bytes_by_filename = self._mod_repository.materialize_mod_files(
+            resolved.effective_files
+        )
 
-        self._live_mods_store.replace_live_mods(jar_bytes_by_filename)
+        live_files = self._live_mods_store.replace_live_mods(jar_bytes_by_filename)
         self._live_mods_store.save_active_mod_lists(
             ActiveModListsRecord(
                 slugs_in_order=unique_slugs,
                 applied_at_utc=utc_now(),
                 applied_files=resolved.effective_files,
+                live_files=live_files,
             )
         )
 
