@@ -289,7 +289,6 @@ class MainWindow:
             command=self.update_application,
         )
         self.update_button.grid(row=0, column=2, sticky="e")
-        self.update_button.grid_remove()
         self.open_logs_button = ttk.Button(
             status_bar,
             text="Open Logs Folder",
@@ -814,16 +813,13 @@ class MainWindow:
         self.root.after(75, lambda: poll(future))
 
     def _set_update_banner(self, availability: UpdateAvailability | None) -> None:
-        label_text, should_show_button, release = _update_banner_state(
+        build_label_text, button_text, release = _update_banner_state(
             self._update_service.current_build_label(),
             availability,
         )
         self._available_update_release = release
-        self.build_label_var.set(label_text)
-        if should_show_button:
-            self.update_button.grid()
-            return
-        self.update_button.grid_remove()
+        self.build_label_var.set(build_label_text)
+        self.update_button.configure(text=button_text)
 
     def _confirm_update(self, release: GitHubRelease) -> bool:
         published = release.published_at_utc.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -947,7 +943,7 @@ def _provider_panel_url(server: StoredServerConfig) -> str | None:
 def _update_banner_state(
     current_build_label: str,
     availability: UpdateAvailability | None,
-) -> tuple[str, bool, GitHubRelease | None]:
+) -> tuple[str, str, GitHubRelease | None]:
     if availability is not None and availability.is_update_available:
-        return "Update available", True, availability.latest_release
-    return f"Build: {current_build_label}", False, None
+        return f"Build: {current_build_label}", "Update available", availability.latest_release
+    return f"Build: {current_build_label}", "Update", None

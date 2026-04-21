@@ -86,15 +86,15 @@ def test_update_banner_state_shows_update_when_available() -> None:
     )
 
     assert _update_banner_state("main-11-aaaaaaa", availability) == (
+        "Build: main-11-aaaaaaa",
         "Update available",
-        True,
         release,
     )
 
 
-def test_update_banner_state_hides_button_when_up_to_date() -> None:
+def test_update_banner_state_keeps_default_button_when_up_to_date() -> None:
     assert _update_banner_state("main-11-aaaaaaa", None) == (
         "Build: main-11-aaaaaaa",
-        False,
+        "Update",
         None,
     )
