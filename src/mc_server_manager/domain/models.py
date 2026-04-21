@@ -72,5 +72,13 @@ class ValidationResult:
         return not self.issues
 
 
+@dataclass(frozen=True, slots=True)
+class RconCommandResult:
+    command: str
+    response_text: str
+    succeeded: bool
+    executed_at: datetime
+
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)

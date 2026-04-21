@@ -13,6 +13,7 @@ from mc_server_manager.infrastructure.repositories import (
 )
 from mc_server_manager.infrastructure.sftp_gateway import SftpGateway
 from mc_server_manager.services.activation import ActivationService
+from mc_server_manager.services.rcon import RconService
 from mc_server_manager.services.world_catalog import WorldCatalogService
 from mc_server_manager.services.world_editor import WorldEditorService
 from mc_server_manager.validation.server_properties import ServerPropertiesValidator
@@ -23,8 +24,8 @@ def main() -> int:
     try:
         loader = DotEnvLoader()
         settings = loader.load()
-        paths = RemotePaths(settings)
-        gateway = SftpGateway(settings)
+        paths = RemotePaths(settings.sftp)
+        gateway = SftpGateway(settings.sftp)
         world_repository = SftpWorldRepository(gateway, paths)
         live_config_store = SftpLiveConfigStore(gateway, paths)
         main_window = MainWindow(
@@ -36,6 +37,7 @@ def main() -> int:
                 WhitelistValidator(),
             ),
             activation_service=ActivationService(world_repository, live_config_store),
+            rcon_service=RconService(settings.rcon, settings.rcon_unavailable_reason),
         )
     except Exception as exc:  # noqa: BLE001
         _show_startup_error(str(exc))

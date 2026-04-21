@@ -18,6 +18,12 @@ Cross-platform Python desktop app for managing remote Minecraft `server.properti
 3. Run `uv sync`.
 4. Start the GUI with `uv run mc-server-manager`.
 
+## Optional RCON
+
+- Add `RCON_HOST`, `RCON_PORT`, and `RCON_PASSWORD` to `.env` to enable console command execution.
+- RCON is optional. The app still starts for SFTP world management when those vars are absent.
+- The console UI uses request/response RCON commands; it does not stream the full live server console.
+
 ## Dev Commands
 
 - Format: `uv run ruff format .`

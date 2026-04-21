@@ -210,6 +210,7 @@ name = "mc-server-manager"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "mctools" },
     { name = "paramiko" },
 ]
 
@@ -221,13 +222,25 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "paramiko", specifier = ">=3.5.0" }]
+requires-dist = [
+    { name = "mctools", specifier = ">=1.4.1" },
+    { name = "paramiko", specifier = ">=3.5.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=8.3.0" },
     { name = "ruff", specifier = ">=0.13.0" },
     { name = "ty", specifier = ">=0.0.1a16" },
+]
+
+[[package]]
+name = "mctools"
+version = "1.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/00/ab0b4bc493b0112b38dfa06cc75959a683ebe5faffe6b27f8c26cc39b53b/mctools-1.4.1.tar.gz", hash = "sha256:5b8d2877586d3e8ee75cc8ec5a2280400e1ab089379c7aa9de2e0c7d290d7efc", size = 41501, upload-time = "2025-09-02T22:45:15.346Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9a/2f/bc156a791c0c651629695e6191d42a5a2b85000195da052a4e9c7bbc1f5c/mctools-1.4.1-py3-none-any.whl", hash = "sha256:c381f69c78effa490512b7515be3461252886d1a66981b94d53a4c718584d3bb", size = 43942, upload-time = "2025-09-02T22:45:13.939Z" },
 ]
 
 [[package]]

@@ -9,7 +9,7 @@ Defines the full Python app, including configuration loading, domain models, ser
 - `services/`: business workflows.
 - `infrastructure/`: remote paths and SFTP-backed persistence.
 - `validation/`: file validators.
-- `gui/`: tkinter UI.
+- `gui/`: tkinter UI, including the optional RCON console popup.
 - `main.py`: package entrypoint.
 
 ## Dependency Rules
@@ -17,4 +17,3 @@ Defines the full Python app, including configuration loading, domain models, ser
 
 ## Change Notes
 - Expand by subsystem, not by dumping unrelated helpers into package root.
-

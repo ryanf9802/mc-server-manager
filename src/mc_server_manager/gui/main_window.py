@@ -7,6 +7,8 @@ from tkinter import messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
 
 from mc_server_manager.domain.models import WorldDetail, WorldFileSet, WorldManifest, WorldStatus
+from mc_server_manager.gui.console_window import ConsoleWindow
+from mc_server_manager.services.rcon import RconService
 
 
 @dataclass(slots=True)
@@ -19,10 +21,17 @@ class EditorSession:
 
 
 class MainWindow:
-    def __init__(self, world_catalog_service, world_editor_service, activation_service) -> None:
+    def __init__(
+        self,
+        world_catalog_service,
+        world_editor_service,
+        activation_service,
+        rcon_service: RconService,
+    ) -> None:
         self._world_catalog_service = world_catalog_service
         self._world_editor_service = world_editor_service
         self._activation_service = activation_service
+        self._rcon_service = rcon_service
 
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._session: EditorSession | None = None
@@ -30,6 +39,7 @@ class MainWindow:
         self._selected_slug: str | None = None
         self._busy = False
         self._suspend_dirty_tracking = False
+        self._console_window: ConsoleWindow | None = None
 
         self.root = tk.Tk()
         self.root.title("Minecraft Server Manager")
@@ -96,7 +106,7 @@ class MainWindow:
 
         actions = ttk.Frame(header)
         actions.grid(row=2, column=0, sticky="ew")
-        for column in range(4):
+        for column in range(5):
             actions.columnconfigure(column, weight=1)
 
         self.save_button = ttk.Button(actions, text="Save", command=self.save_world)
@@ -107,6 +117,8 @@ class MainWindow:
         self.revert_button.grid(row=0, column=2, sticky="ew", padx=(8, 0))
         self.delete_button = ttk.Button(actions, text="Delete", command=self.delete_world)
         self.delete_button.grid(row=0, column=3, sticky="ew", padx=(8, 0))
+        self.console_button = ttk.Button(actions, text="Console", command=self.open_console)
+        self.console_button.grid(row=0, column=4, sticky="ew", padx=(8, 0))
 
         metadata = ttk.Frame(header)
         metadata.grid(row=3, column=0, sticky="ew", pady=(12, 0))
@@ -194,6 +206,14 @@ class MainWindow:
             )
 
         self._run_background(task, on_success, start_message="Refreshing remote worlds...")
+
+    def open_console(self) -> None:
+        if self._console_window is not None and self._console_window.window.winfo_exists():
+            self._console_window.present()
+            return
+
+        self._console_window = ConsoleWindow(self.root, self._rcon_service)
+        self._console_window.present()
 
     def create_draft(self) -> None:
         display_name = self.new_world_name_var.get().strip()
@@ -460,6 +480,7 @@ class MainWindow:
         self.delete_button.configure(
             state="normal" if has_session and not self._busy else "disabled"
         )
+        self.console_button.configure(state=common_state)
         list_state = tk.DISABLED if self._busy else tk.NORMAL
         self.world_listbox.configure(state=list_state)
         entry_state = "disabled" if self._busy else "normal"
@@ -503,5 +524,7 @@ class MainWindow:
         self.status_message_var.set(message)
 
     def _on_close(self) -> None:
+        if self._console_window is not None and self._console_window.window.winfo_exists():
+            self._console_window.close()
         self._executor.shutdown(wait=False, cancel_futures=True)
         self.root.destroy()
